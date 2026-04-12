@@ -29,6 +29,19 @@ function parseStatLine(line, prefix) {
 }
 
 function parseShowdownSets(text) {
+  const parseHeader = (headerLine) => {
+    const [namePart, itemPart] = headerLine.split('@').map((part) => part.trim());
+    const withoutGender = namePart.replace(/\s+\((M|F)\)$/i, '').trim();
+    const nicknameSpeciesMatch = withoutGender.match(/^(.*?)\s+\(([^()]+)\)$/);
+    const species = nicknameSpeciesMatch ? nicknameSpeciesMatch[2].trim() : withoutGender;
+
+    return {
+      name: withoutGender,
+      species,
+      item: itemPart || undefined,
+    };
+  };
+
   return text
     .trim()
     .split(/\n\s*\n/g)
@@ -37,10 +50,11 @@ function parseShowdownSets(text) {
     .map((block) => {
       const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
       const header = lines[0];
-      const [namePart, itemPart] = header.split('@').map((part) => part.trim());
+      const parsedHeader = parseHeader(header);
       const set = {
-        name: namePart,
-        item: itemPart || undefined,
+        name: parsedHeader.name,
+        species: parsedHeader.species,
+        item: parsedHeader.item,
         ability: undefined,
         nature: undefined,
         evs: {},
@@ -67,7 +81,7 @@ function parseShowdownSets(text) {
 }
 
 function toPokemon(set) {
-  return new Pokemon(gen, set.name, {
+  return new Pokemon(gen, set.species, {
     item: set.item,
     ability: set.ability,
     nature: set.nature,
