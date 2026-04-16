@@ -285,6 +285,8 @@ function normalizePerspective(matchups, pokemon) {
         return {
           pokemon: entry.attacker,
           opponent: entry.defender,
+          sourceAttacker: entry.attacker,
+          sourceDefender: entry.defender,
           directionalOutcomeClass: entry.outcomeClass,
           scoreContribution: entry.scoreContribution,
           tags: entry.tags,
@@ -295,6 +297,8 @@ function normalizePerspective(matchups, pokemon) {
       return {
         pokemon: normalizeName(pokemon),
         opponent: entry.attacker,
+        sourceAttacker: entry.attacker,
+        sourceDefender: entry.defender,
         directionalOutcomeClass: invertOutcomeClass(entry.outcomeClass),
         scoreContribution: entry.scoreContribution * -1,
         tags: entry.tags,
@@ -319,7 +323,66 @@ function pairKeyUnordered(firstId, secondId) {
   return [normalizeName(firstId).toLowerCase(), normalizeName(secondId).toLowerCase()].sort().join('::');
 }
 
+function createDirectionalCalculation({ attacker, defender, scoreContribution, outcomeClass, tags, ruleTrace, missing = false }) {
+  return {
+    attacker: normalizeName(attacker),
+    defender: normalizeName(defender),
+    calculationValue: Number.isFinite(scoreContribution) ? scoreContribution : 0,
+    outcomeClass: outcomeClass || 'neutral',
+    tags: Array.isArray(tags) ? tags : [],
+    ruleTrace: Array.isArray(ruleTrace) ? ruleTrace : [],
+    missing,
+  };
+}
+
 function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
+  const forward = rowsFromPerspective.find((row) => (
+    normalizeName(row.sourceAttacker).toLowerCase() === pokemon.toLowerCase()
+    && normalizeName(row.sourceDefender).toLowerCase() === opponent.toLowerCase()
+  ));
+  const reverse = rowsFromPerspective.find((row) => (
+    normalizeName(row.sourceAttacker).toLowerCase() === opponent.toLowerCase()
+    && normalizeName(row.sourceDefender).toLowerCase() === pokemon.toLowerCase()
+  ));
+  const forwardCalculation = forward
+    ? createDirectionalCalculation({
+      attacker: pokemon,
+      defender: opponent,
+      scoreContribution: forward.scoreContribution,
+      outcomeClass: forward.directionalOutcomeClass,
+      tags: forward.tags,
+      ruleTrace: forward.ruleTrace,
+      missing: false,
+    })
+    : createDirectionalCalculation({
+      attacker: pokemon,
+      defender: opponent,
+      scoreContribution: 0,
+      outcomeClass: 'neutral',
+      tags: ['MISSING_DIRECTION'],
+      ruleTrace: [],
+      missing: true,
+    });
+  const reverseCalculation = reverse
+    ? createDirectionalCalculation({
+      attacker: opponent,
+      defender: pokemon,
+      scoreContribution: reverse.scoreContribution,
+      outcomeClass: reverse.directionalOutcomeClass,
+      tags: reverse.tags,
+      ruleTrace: reverse.ruleTrace,
+      missing: false,
+    })
+    : createDirectionalCalculation({
+      attacker: opponent,
+      defender: pokemon,
+      scoreContribution: 0,
+      outcomeClass: 'neutral',
+      tags: ['MISSING_DIRECTION'],
+      ruleTrace: [],
+      missing: true,
+    });
+
   if (rowsFromPerspective.length === 0) {
     return {
       pokemon,
@@ -333,19 +396,26 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
       calculationFromDefender: 0,
       directionalOutcomeClassFromAttacker: 'self/tie',
       directionalOutcomeClassFromDefender: 'self/tie',
+      calculationOffset: 0,
+      forwardCalculation,
+      reverseCalculation,
     };
   }
 
   if (rowsFromPerspective.length === 1) {
-    const [row] = rowsFromPerspective;
+    const row = forward || reverse || rowsFromPerspective[0];
+    const calculationOffset = row.scoreContribution;
     return {
       ...row,
-      result: deriveBinaryResult(row.scoreContribution, Number.NaN),
-      offset: row.scoreContribution,
-      calculationFromAttacker: row.scoreContribution,
-      calculationFromDefender: Number.NaN,
+      result: deriveBinaryResult(forwardCalculation.calculationValue, reverseCalculation.calculationValue),
+      offset: calculationOffset,
+      calculationOffset,
+      calculationFromAttacker: forwardCalculation.calculationValue,
+      calculationFromDefender: reverseCalculation.calculationValue,
       directionalOutcomeClassFromAttacker: row.directionalOutcomeClass,
       directionalOutcomeClassFromDefender: 'missing',
+      forwardCalculation,
+      reverseCalculation,
     };
   }
 
@@ -360,12 +430,15 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
     scoreContribution: averagedScore,
     tags: mergedTags,
     ruleTrace: mergedRuleTrace,
-    result: deriveBinaryResult(first.scoreContribution, second.scoreContribution),
+    result: deriveBinaryResult(forwardCalculation.calculationValue, reverseCalculation.calculationValue),
     offset: averagedScore,
-    calculationFromAttacker: first.scoreContribution,
-    calculationFromDefender: second.scoreContribution,
-    directionalOutcomeClassFromAttacker: first.directionalOutcomeClass,
-    directionalOutcomeClassFromDefender: second.directionalOutcomeClass,
+    calculationOffset: averagedScore,
+    calculationFromAttacker: forwardCalculation.calculationValue,
+    calculationFromDefender: reverseCalculation.calculationValue,
+    directionalOutcomeClassFromAttacker: forwardCalculation.outcomeClass,
+    directionalOutcomeClassFromDefender: reverseCalculation.outcomeClass,
+    forwardCalculation,
+    reverseCalculation,
   };
 }
 
@@ -447,6 +520,8 @@ function buildOutput({ pokemon, rulebook, sortedMatchups, sourcePath, includeLeg
       directionalOutcomeClass,
       directionalOutcomeClassFromAttacker,
       directionalOutcomeClassFromDefender,
+      sourceAttacker,
+      sourceDefender,
       ...withoutLegacy
     } = row;
     return withoutLegacy;
