@@ -215,6 +215,38 @@ function bestKillTierForMoves(moves) {
   ), KILL_TIERS.WORSE);
 }
 
+function hasDamagingPriorityMove(moves) {
+  return moves.some((move) => (move.priority ?? 0) > 0 && (move.damage?.max ?? 0) > 0);
+}
+
+function compareResultsByRulebook(a, b) {
+  const order = [
+    KILL_TIERS.OHKO_GUARANTEED,
+    KILL_TIERS.OHKO_POSSIBLE,
+    KILL_TIERS.HKO2_GUARANTEED,
+    KILL_TIERS.HKO2_POSSIBLE,
+    KILL_TIERS.WORSE,
+  ];
+  const rank = new Map(order.map((tier, index) => [tier, index]));
+
+  const tierDiff = rank.get(a.bestKillTier) - rank.get(b.bestKillTier);
+  if (tierDiff !== 0) return tierDiff;
+
+  const aSpeedAdvantage = a.attackerSpeed - a.defenderSpeed;
+  const bSpeedAdvantage = b.attackerSpeed - b.defenderSpeed;
+  if (aSpeedAdvantage !== bSpeedAdvantage) {
+    return bSpeedAdvantage - aSpeedAdvantage;
+  }
+
+  const aPriorityEdge = a.hasDamagingPriorityMove ? 1 : 0;
+  const bPriorityEdge = b.hasDamagingPriorityMove ? 1 : 0;
+  if (aPriorityEdge !== bPriorityEdge) {
+    return bPriorityEdge - aPriorityEdge;
+  }
+
+  return a.attacker.localeCompare(b.attacker);
+}
+
 function calculateMatchups(sets) {
   const results = [];
   const skipped = [];
@@ -252,6 +284,7 @@ function calculateMatchups(sets) {
           const killFlags = deriveKillFlags(damage, defenderHp);
           return {
             move: moveName,
+            priority: null,
             desc: `Invalid move: ${message}`,
             damage,
             ...killFlags,
@@ -263,6 +296,7 @@ function calculateMatchups(sets) {
           const killFlags = deriveKillFlags(damage, defenderHp);
           return {
             move: moveName,
+            priority: null,
             desc: 'Status move (no direct damage).',
             damage,
             ...killFlags,
@@ -287,6 +321,7 @@ function calculateMatchups(sets) {
 
         return {
           move: moveName,
+          priority: move.priority,
           desc: description,
           damage,
           ...killFlags,
@@ -294,15 +329,18 @@ function calculateMatchups(sets) {
         };
       });
 
-      results.push({
+      const matchupResult = {
         attacker: attackerSet.name,
         defender: defenderSet.name,
         attackerSpeed,
         defenderSpeed,
         speedTie: attackerSpeed === defenderSpeed,
         bestKillTier: bestKillTierForMoves(moveResults),
+        hasDamagingPriorityMove: hasDamagingPriorityMove(moveResults),
         moves: moveResults,
-      });
+      };
+
+      results.push(matchupResult);
     }
   }
 
@@ -311,11 +349,14 @@ function calculateMatchups(sets) {
 
 function toText(results) {
   const lines = [];
-  for (const result of results) {
+  const sortedResults = [...results].sort(compareResultsByRulebook);
+  for (const result of sortedResults) {
     lines.push(`${result.attacker} -> ${result.defender}`);
     lines.push(`  Speed: ${result.attackerSpeed} vs ${result.defenderSpeed}${result.speedTie ? ' (tie)' : ''}`);
+    lines.push(`  Has damaging priority move: ${result.hasDamagingPriorityMove}`);
     for (const move of result.moves) {
-      lines.push(`  - ${move.move}: ${move.damage.min}-${move.damage.max}`);
+      const priorityLabel = move.priority == null ? '' : ` [prio ${move.priority}]`;
+      lines.push(`  - ${move.move}${priorityLabel}: ${move.damage.min}-${move.damage.max}`);
       lines.push(`    ${move.desc}`);
     }
     lines.push('');
