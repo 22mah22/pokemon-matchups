@@ -74,11 +74,11 @@ test('rulebook can exclude and adjust scoring', () => withTempDir((dir) => {
 
 test('sorting keeps OHKO wins on top and OHKO losses at bottom', () => {
   const sorted = sortMatchups([
-    { opponent: 'B', outcomeClass: 'loss', scoreContribution: -1, tags: [] },
-    { opponent: 'C', outcomeClass: 'loss', scoreContribution: -5, tags: ['OHKO'] },
-    { opponent: 'A', outcomeClass: 'win', scoreContribution: 2, tags: [] },
-    { opponent: 'D', outcomeClass: 'win', scoreContribution: 1, tags: ['OHKO'] },
-    { opponent: 'E', outcomeClass: 'neutral', scoreContribution: 0, tags: [] },
+    { opponent: 'B', result: 0, scoreContribution: -1, tags: [] },
+    { opponent: 'C', result: 0, scoreContribution: -5, tags: ['OHKO'] },
+    { opponent: 'A', result: 1, scoreContribution: 2, tags: [] },
+    { opponent: 'D', result: 1, scoreContribution: 1, tags: ['OHKO'] },
+    { opponent: 'E', result: 0, scoreContribution: 0, tags: [] },
   ]);
 
   assert.equal(sorted[0].opponent, 'D');
@@ -114,10 +114,9 @@ test('pairwise rows emit one row per opponent and synthesize self when missing',
 
   const self = rows.find((row) => row.opponent === 'Pikachu');
   assert.ok(self);
-  assert.equal(self.outcomeClass, 'draw');
   assert.equal(self.scoreContribution, 0);
-  assert.equal(self.binaryResult, 0);
+  assert.equal(self.result, 0);
   assert.equal(self.offset, 0);
-  assert.equal(self.calculationFromAttacker, 'self/tie');
-  assert.equal(self.calculationFromDefender, 'self/tie');
+  assert.equal(self.calculationFromAttacker, 0);
+  assert.equal(self.calculationFromDefender, 0);
 });
