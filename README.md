@@ -24,6 +24,20 @@ This reads Showdown import sets from `libraries/*.txt` and writes matchup output
 - `matchups/test_set_2_matchups.json`
 - `matchups/test_set_2_matchups.txt`
 
+## Output format
+
+Each `results[]` entry in `matchups/*_matchups.json` is an attacker-vs-defender evaluation with these key fields:
+
+- `attacker`, `defender`
+- `attackerSpeed`, `defenderSpeed`, `speedTie`
+- `bestKillTier`
+- `hasDamagingPriorityMove`: `true` when at least one move has `priority > 0` and does direct damage in that matchup (`damage.max > 0`)
+- `moves[]`: per-move breakdown (`move`, `priority`, `damage`, `desc`, and KO tier/flag fields)
+
+`priority` is populated from Smogon Calc for valid damaging moves, and is `null` for status or invalid-move fallback entries.
+
+Rulebook consumers should apply tie-break criteria in this order when all higher criteria are equal: kill tier, speed edge, then `hasDamagingPriorityMove`.
+
 ## GitHub Actions job
 
 Run the **Generate Pokemon Matchups** workflow from the Actions tab and provide a library file path (for example `libraries/champions_ou.txt`).
