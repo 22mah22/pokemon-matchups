@@ -7,10 +7,16 @@ on:
         description: "Path to a showdown library file in this repo (for example: libraries/test_set_1.txt)"
         required: true
         default: "libraries/test_set_1.txt"
+      commit_and_push:
+        description: "Commit and push generated matchup files back to the branch"
+        required: false
+        default: "false"
 
 jobs:
   generate-matchups:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -37,6 +43,24 @@ jobs:
         run: |
           BASE_NAME="$(basename "$LIBRARY_FILE" .txt)"
           echo "BASE_NAME=$BASE_NAME" >> "$GITHUB_ENV"
+
+      - name: Commit and push generated files (optional)
+        if: ${{ github.event.inputs.commit_and_push == 'true' }}
+        env:
+          BASE_NAME: ${{ env.BASE_NAME }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add "matchups/${BASE_NAME}_matchups.txt" "matchups/${BASE_NAME}_matchups.json"
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update ${BASE_NAME} matchups"
+          git push origin "${{ github.ref_name }}"
 
       - name: Upload JSON output artifact
         uses: actions/upload-artifact@v4
