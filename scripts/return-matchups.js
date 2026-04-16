@@ -12,6 +12,7 @@ function parseArgs(argv) {
     pokemon: null,
     outputPath: null,
     trace: false,
+    includeLegacyFields: false,
   };
 
   for (let i = 2; i < argv.length; i += 1) {
@@ -34,6 +35,8 @@ function parseArgs(argv) {
       i += 1;
     } else if (token === '--trace') {
       args.trace = true;
+    } else if (token === '--include-legacy-fields') {
+      args.includeLegacyFields = true;
     }
   }
 
@@ -282,7 +285,7 @@ function normalizePerspective(matchups, pokemon) {
         return {
           pokemon: entry.attacker,
           opponent: entry.defender,
-          outcomeClass: entry.outcomeClass,
+          directionalOutcomeClass: entry.outcomeClass,
           scoreContribution: entry.scoreContribution,
           tags: entry.tags,
           ruleTrace: entry.ruleTrace || [],
@@ -292,12 +295,20 @@ function normalizePerspective(matchups, pokemon) {
       return {
         pokemon: normalizeName(pokemon),
         opponent: entry.attacker,
-        outcomeClass: invertOutcomeClass(entry.outcomeClass),
+        directionalOutcomeClass: invertOutcomeClass(entry.outcomeClass),
         scoreContribution: entry.scoreContribution * -1,
         tags: entry.tags,
         ruleTrace: entry.ruleTrace || [],
       };
     });
+}
+
+function deriveBinaryResult(calculationFromAttacker, calculationFromDefender) {
+  if (!Number.isFinite(calculationFromAttacker) || !Number.isFinite(calculationFromDefender)) {
+    return 0;
+  }
+
+  return calculationFromAttacker > calculationFromDefender ? 1 : 0;
 }
 
 function pairKeyDirectional(attackerId, defenderId) {
@@ -313,14 +324,15 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
     return {
       pokemon,
       opponent,
-      outcomeClass: 'draw',
       scoreContribution: 0,
       tags: ['PAIR_TIE'],
       ruleTrace: [],
-      binaryResult: 0,
+      result: 0,
       offset: 0,
-      calculationFromAttacker: 'self/tie',
-      calculationFromDefender: 'self/tie',
+      calculationFromAttacker: 0,
+      calculationFromDefender: 0,
+      directionalOutcomeClassFromAttacker: 'self/tie',
+      directionalOutcomeClassFromDefender: 'self/tie',
     };
   }
 
@@ -328,10 +340,12 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
     const [row] = rowsFromPerspective;
     return {
       ...row,
-      binaryResult: row.scoreContribution > 0 ? 1 : row.scoreContribution < 0 ? -1 : 0,
+      result: deriveBinaryResult(row.scoreContribution, Number.NaN),
       offset: row.scoreContribution,
-      calculationFromAttacker: row.outcomeClass,
-      calculationFromDefender: 'missing',
+      calculationFromAttacker: row.scoreContribution,
+      calculationFromDefender: Number.NaN,
+      directionalOutcomeClassFromAttacker: row.directionalOutcomeClass,
+      directionalOutcomeClassFromDefender: 'missing',
     };
   }
 
@@ -343,14 +357,15 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
   return {
     pokemon,
     opponent,
-    outcomeClass: averagedScore > 0 ? 'win' : averagedScore < 0 ? 'loss' : 'draw',
     scoreContribution: averagedScore,
     tags: mergedTags,
     ruleTrace: mergedRuleTrace,
-    binaryResult: averagedScore > 0 ? 1 : averagedScore < 0 ? -1 : 0,
+    result: deriveBinaryResult(first.scoreContribution, second.scoreContribution),
     offset: averagedScore,
-    calculationFromAttacker: first.outcomeClass,
-    calculationFromDefender: second.outcomeClass,
+    calculationFromAttacker: first.scoreContribution,
+    calculationFromDefender: second.scoreContribution,
+    directionalOutcomeClassFromAttacker: first.directionalOutcomeClass,
+    directionalOutcomeClassFromDefender: second.directionalOutcomeClass,
   };
 }
 
@@ -408,22 +423,35 @@ function isOhkoOutcome(entry) {
 function sortMatchups(matchups) {
   const group = (entry) => {
     const ohko = isOhkoOutcome(entry);
-    if (entry.outcomeClass === 'win' && ohko) return 0;
-    if (entry.outcomeClass === 'loss' && ohko) return 3;
-    if (entry.outcomeClass === 'loss') return 2;
-    return 1;
+    if (entry.result === 1 && ohko) return 0;
+    if (entry.result === 1) return 1;
+    if (entry.scoreContribution < 0 && ohko) return 4;
+    if (entry.scoreContribution < 0) return 3;
+    return 2;
   };
 
   return [...matchups].sort((a, b) => (
     (group(a) - group(b))
     || (b.scoreContribution - a.scoreContribution)
     || a.opponent.localeCompare(b.opponent)
-    || a.outcomeClass.localeCompare(b.outcomeClass)
+    || ((b.result ?? 0) - (a.result ?? 0))
   ));
 }
 
-function buildOutput({ pokemon, rulebook, sortedMatchups, sourcePath }) {
+function buildOutput({ pokemon, rulebook, sortedMatchups, sourcePath, includeLegacyFields = false }) {
   const totalScore = sortedMatchups.reduce((sum, row) => sum + row.scoreContribution, 0);
+  const matchups = sortedMatchups.map((row) => {
+    if (includeLegacyFields) return row;
+
+    const {
+      directionalOutcomeClass,
+      directionalOutcomeClassFromAttacker,
+      directionalOutcomeClassFromDefender,
+      ...withoutLegacy
+    } = row;
+    return withoutLegacy;
+  });
+
   return {
     selected_pokemon: pokemon,
     applied_rulebook: {
@@ -433,7 +461,7 @@ function buildOutput({ pokemon, rulebook, sortedMatchups, sourcePath }) {
     source_matchups: sourcePath,
     generated_at: new Date().toISOString(),
     total_score: totalScore,
-    matchups: sortedMatchups,
+    matchups,
   };
 }
 
@@ -449,7 +477,7 @@ function runReturnMatchups(argv = process.argv) {
   }
 
   if (!args.matchupsPath || !args.rulebookPath || !args.pokemon || !args.outputPath) {
-    throw new Error('Usage: node scripts/return-matchups.js return-matchups --matchups <path> --rulebook <path> --pokemon <name> --output <path> [--trace]');
+    throw new Error('Usage: node scripts/return-matchups.js return-matchups --matchups <path> --rulebook <path> --pokemon <name> --output <path> [--trace] [--include-legacy-fields]');
   }
 
   const matchupsPath = path.resolve(args.matchupsPath);
@@ -461,7 +489,13 @@ function runReturnMatchups(argv = process.argv) {
   const ruled = applyRulebook(matchups, rulebook, args.trace);
   const perspective = buildPairwiseRowsForSelectedPokemon(ruled, args.pokemon);
   const sorted = sortMatchups(perspective);
-  const payload = buildOutput({ pokemon: normalizeName(args.pokemon), rulebook, sortedMatchups: sorted, sourcePath: args.matchupsPath });
+  const payload = buildOutput({
+    pokemon: normalizeName(args.pokemon),
+    rulebook,
+    sortedMatchups: sorted,
+    sourcePath: args.matchupsPath,
+    includeLegacyFields: args.includeLegacyFields,
+  });
 
   ensureParentDirectory(outputPath);
   fs.writeFileSync(outputPath, JSON.stringify(payload, null, 2));
@@ -491,6 +525,7 @@ module.exports = {
   loadRulebook,
   applyRulebook,
   normalizePerspective,
+  deriveBinaryResult,
   pairKeyUnordered,
   buildPairwiseRowsForSelectedPokemon,
   sortMatchups,
