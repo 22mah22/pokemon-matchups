@@ -10,7 +10,7 @@ npm run matchups:test1
 npm run matchups:test2
 ```
 
-This reads Showdown import sets from `libraries/*.txt` and writes matchup outputs to `matchups/*_matchups.json` and `matchups/*_matchups.txt`.
+This reads Showdown import sets from `libraries/*.txt` (with optional enrichment from companion `libraries/*.json`) and writes matchup outputs to `matchups/*_matchups.json` and `matchups/*_matchups.txt`.
 
 ## File layout
 
@@ -55,3 +55,36 @@ By default, the workflow only uploads the generated files as artifacts. If you s
 - stages `matchups/<library>_matchups.txt` and `matchups/<library>_matchups.json`,
 - creates commit `Update <library> matchups` only when staged files changed,
 - pushes the commit to the workflow branch (branch protection rules still apply).
+
+## Ranking job input design
+
+Ranking is handled by `scripts/rank-matchups.js` and now treats **JSON as the primary input format**.
+
+```bash
+node scripts/rank-matchups.js --input matchups/champions_ou_matchups.json --rulebook kill-tier-speed-priority-v1
+```
+
+### Supported input
+
+- Recommended: `matchups/*.json` (precomputed matchup results)
+- Recommended: `libraries/*.json` (set library that can be expanded into matchup results)
+- Optional: `*.txt` inputs, such as `libraries/*.txt`
+
+TXT is accepted for compatibility, but ranking quality may depend on whether a companion JSON file exists for enrichment (`<same-name>.json`). For best ranking accuracy/reliability, prefer JSON inputs.
+
+### CLI contract
+
+- Required: `--input <path>`
+- Required: `--rulebook <id>`
+- Current rulebook IDs: `kill-tier-speed-priority-v1`
+
+The script validates rulebook IDs up front and fails fast when no normalized matchup records can be produced.
+
+### Normalized in-memory schema
+
+Each directional record used by ranking is normalized to:
+
+- `pokemon`: `{ id, name }`
+- `opponent`: `{ id, name }`
+- `result`: `win | lose | tie`
+- `metadata`: includes `rulebookId`, kill-tier rank data, speed advantage, and priority flags used by rulebook evaluation
