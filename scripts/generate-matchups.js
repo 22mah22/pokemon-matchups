@@ -91,16 +91,38 @@ function toPokemon(set) {
   });
 }
 
+function validateSet(set) {
+  try {
+    return { pokemon: toPokemon(set) };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { error: message };
+  }
+}
+
 function calculateMatchups(sets) {
   const results = [];
+  const skipped = [];
+  const pokemonCache = new Map();
 
-  for (let i = 0; i < sets.length; i += 1) {
-    for (let j = 0; j < sets.length; j += 1) {
+  for (const set of sets) {
+    const validated = validateSet(set);
+    if (validated.error) {
+      skipped.push({ name: set.name, species: set.species, reason: validated.error });
+      continue;
+    }
+    pokemonCache.set(set.name, validated.pokemon);
+  }
+
+  const validSets = sets.filter((set) => pokemonCache.has(set.name));
+
+  for (let i = 0; i < validSets.length; i += 1) {
+    for (let j = 0; j < validSets.length; j += 1) {
       if (i === j) continue;
-      const attackerSet = sets[i];
-      const defenderSet = sets[j];
-      const attacker = toPokemon(attackerSet);
-      const defender = toPokemon(defenderSet);
+      const attackerSet = validSets[i];
+      const defenderSet = validSets[j];
+      const attacker = pokemonCache.get(attackerSet.name);
+      const defender = pokemonCache.get(defenderSet.name);
 
       const moveResults = attackerSet.moves.map((moveName) => {
         const move = new Move(gen, moveName);
@@ -139,7 +161,7 @@ function calculateMatchups(sets) {
     }
   }
 
-  return results;
+  return { results, skipped };
 }
 
 function toText(results) {
@@ -169,12 +191,21 @@ function main() {
 
   const file = fs.readFileSync(inputPath, 'utf8');
   const sets = parseShowdownSets(file);
-  const results = calculateMatchups(sets);
+  const { results, skipped } = calculateMatchups(sets);
 
   fs.mkdirSync(path.dirname(outJsonPath), { recursive: true });
-  fs.writeFileSync(outJsonPath, JSON.stringify({ source: inputArg, count: results.length, results }, null, 2));
+  fs.writeFileSync(outJsonPath, JSON.stringify({
+    source: inputArg,
+    count: results.length,
+    skippedCount: skipped.length,
+    skipped,
+    results,
+  }, null, 2));
   fs.writeFileSync(outTxtPath, toText(results));
 
+  if (skipped.length > 0) {
+    console.warn(`Skipped ${skipped.length} invalid set(s).`);
+  }
   console.log(`Generated:\n- ${outJsonPath}\n- ${outTxtPath}`);
 }
 
