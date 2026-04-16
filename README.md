@@ -57,34 +57,75 @@ By default, the workflow only uploads the generated files as artifacts. If you s
 - pushes the commit to the workflow branch (branch protection rules still apply).
 
 ## Ranking job input design
+Ranking is handled by `scripts/rank-matchups.js`.
 
-Ranking is handled by `scripts/rank-matchups.js` and now treats **JSON as the primary input format**.
+### Manual ranking via CLI
 
 ```bash
-node scripts/rank-matchups.js --input matchups/champions_ou_matchups.json --rulebook kill-tier-speed-priority-v1
+node scripts/rank-matchups.js \
+  --input matchups/champions_ou_matchups.json \
+  --rulebook standard_v1 \
+  --output matchups/champions_ou_ranked.json
 ```
 
-### Supported input
+### GitHub Actions manual dispatch examples
 
-- Recommended: `matchups/*.json` (precomputed matchup results)
-- Recommended: `libraries/*.json` (set library that can be expanded into matchup results)
-- Optional: `*.txt` inputs, such as `libraries/*.txt`
+Run the **Rank Pokemon Matchups** workflow from the Actions tab with inputs such as:
 
-TXT is accepted for compatibility, but ranking quality may depend on whether a companion JSON file exists for enrichment (`<same-name>.json`). For best ranking accuracy/reliability, prefer JSON inputs.
+- `input_file`: `matchups/champions_ou_matchups.json`
+- `rulebook`: `standard_v1`
+- `output_file`: `matchups/champions_ou_ranked.json`
+- `commit_and_push`: `true` (or `false` to artifact-only)
 
-### CLI contract
+When `commit_and_push` is `true`, the workflow stages only the selected `output_file`, commits only if there is a staged diff, and pushes to the current branch (`github.ref_name`).
 
-- Required: `--input <path>`
-- Required: `--rulebook <id>`
-- Current rulebook IDs: `kill-tier-speed-priority-v1`
+### Rulebooks
 
-The script validates rulebook IDs up front and fails fast when no normalized matchup records can be produced.
+Current rulebook IDs:
 
-### Normalized in-memory schema
+- `standard_v1` (win/tie/loss = 3/1/0)
+- `zero_sum_v1` (win/tie/loss = 1/0/-1)
+- `kill-tier-speed-priority-v1` (legacy alias of `standard_v1` scoring)
 
-Each directional record used by ranking is normalized to:
+### Ranked output shape
 
-- `pokemon`: `{ id, name }`
-- `opponent`: `{ id, name }`
-- `result`: `win | lose | tie`
-- `metadata`: includes `rulebookId`, kill-tier rank data, speed advantage, and priority flags used by rulebook evaluation
+The ranking output JSON contains:
+
+- `rulebook`: object with `id`, `description`, and `scoring`
+- `generatedAt`: ISO timestamp
+- `input`: original input path
+- `totals`: summary counts
+- `stats[]`: per-Pokémon stats (`pokemon`, `wins`, `losses`, `ties`, `score`, `total`, `winRate`)
+- `ranking[]`: final ordered ranking entries (`rank`, `pokemon`, `score`)
+
+Example shape:
+
+```json
+{
+  "rulebook": {
+    "id": "standard_v1",
+    "description": "Scores each normalized result as win=3, tie=1, loss=0.",
+    "scoring": { "win": 3, "tie": 1, "loss": 0 }
+  },
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "input": "matchups/champions_ou_matchups.json",
+  "totals": {
+    "normalizedCount": 0,
+    "pokemonCount": 0
+  },
+  "stats": [
+    {
+      "pokemon": "Examplemon",
+      "wins": 12,
+      "losses": 5,
+      "ties": 1,
+      "score": 37,
+      "total": 18,
+      "winRate": 0.7058823529
+    }
+  ],
+  "ranking": [
+    { "rank": 1, "pokemon": "Examplemon", "score": 37 }
+  ]
+}
+```

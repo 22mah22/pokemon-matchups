@@ -9,9 +9,34 @@ const {
 } = require('./generate-matchups');
 
 const RULEBOOKS = {
+  standard_v1: {
+    id: 'standard_v1',
+    description: 'Scores each normalized result as win=3, tie=1, loss=0.',
+    scoring: {
+      win: 3,
+      tie: 1,
+      loss: 0,
+    },
+    compareDirections: compareResultsByRulebook,
+  },
+  zero_sum_v1: {
+    id: 'zero_sum_v1',
+    description: 'Scores each normalized result as win=1, tie=0, loss=-1.',
+    scoring: {
+      win: 1,
+      tie: 0,
+      loss: -1,
+    },
+    compareDirections: compareResultsByRulebook,
+  },
   'kill-tier-speed-priority-v1': {
     id: 'kill-tier-speed-priority-v1',
-    description: 'Compare best kill tier, then speed edge, then damaging priority.',
+    description: 'Legacy alias of standard_v1; compare best kill tier, speed edge, then damaging priority.',
+    scoring: {
+      win: 3,
+      tie: 1,
+      loss: 0,
+    },
     compareDirections: compareResultsByRulebook,
   },
 };
@@ -27,6 +52,7 @@ const KILL_TIER_ORDER = new Map([
 function parseArgs(argv) {
   let inputPath;
   let rulebookId;
+  let outputPath;
 
   for (let i = 2; i < argv.length; i += 1) {
     const token = argv[i];
@@ -36,10 +62,13 @@ function parseArgs(argv) {
     } else if (token === '--rulebook') {
       rulebookId = argv[i + 1];
       i += 1;
+    } else if (token === '--output') {
+      outputPath = argv[i + 1];
+      i += 1;
     }
   }
 
-  return { inputPath, rulebookId };
+  return { inputPath, rulebookId, outputPath };
 }
 
 function normalizeName(value) {
@@ -157,7 +186,7 @@ function loadResultsFromInput(inputPath) {
   throw new Error('JSON input must include either a "results" array (matchups) or a "sets" array (library).');
 }
 
-function aggregateRanking(normalized) {
+function aggregateRanking(normalized, rulebook) {
   const table = new Map();
 
   for (const record of normalized) {
@@ -168,26 +197,76 @@ function aggregateRanking(normalized) {
         wins: 0,
         losses: 0,
         ties: 0,
+        score: 0,
+        total: 0,
+        winRate: 0,
       });
     }
     const row = table.get(key);
     if (record.result === 'win') row.wins += 1;
     else if (record.result === 'lose') row.losses += 1;
     else row.ties += 1;
+
+    const scoringResult = record.result === 'lose' ? 'loss' : record.result;
+    row.score += rulebook.scoring[scoringResult] ?? 0;
+    row.total += 1;
   }
 
-  return [...table.values()].sort((a, b) => (
-    (b.wins - a.wins)
-      || (a.losses - b.losses)
-      || (b.ties - a.ties)
+  const ranked = [...table.values()].map((row) => {
+    const denominator = row.wins + row.losses;
+    const winRate = denominator > 0 ? row.wins / denominator : 0;
+    return {
+      pokemon: row.pokemon,
+      wins: row.wins,
+      losses: row.losses,
+      ties: row.ties,
+      score: row.score,
+      total: row.total,
+      winRate,
+    };
+  });
+
+  ranked.sort((a, b) => (
+    (b.score - a.score)
+      || (b.winRate - a.winRate)
+      || (b.wins - a.wins)
       || a.pokemon.localeCompare(b.pokemon)
   ));
+
+  return ranked;
+}
+
+function ensureParentDirectory(filePath) {
+  const outputDir = path.dirname(filePath);
+  fs.mkdirSync(outputDir, { recursive: true });
+}
+
+function buildOutputPayload(inputArg, rulebook, normalized, ranking) {
+  return {
+    rulebook: {
+      id: rulebook.id,
+      description: rulebook.description,
+      scoring: rulebook.scoring,
+    },
+    generatedAt: new Date().toISOString(),
+    input: inputArg,
+    totals: {
+      normalizedCount: normalized.length,
+      pokemonCount: ranking.length,
+    },
+    stats: ranking,
+    ranking: ranking.map((row, index) => ({
+      rank: index + 1,
+      pokemon: row.pokemon,
+      score: row.score,
+    })),
+  };
 }
 
 function main() {
-  const { inputPath: inputArg, rulebookId } = parseArgs(process.argv);
-  if (!inputArg || !rulebookId) {
-    console.error('Usage: node scripts/rank-matchups.js --input <path> --rulebook <id>');
+  const { inputPath: inputArg, rulebookId, outputPath: outputArg } = parseArgs(process.argv);
+  if (!inputArg || !rulebookId || !outputArg) {
+    console.error('Usage: node scripts/rank-matchups.js --input <path> --rulebook <id> --output <path>');
     process.exit(1);
   }
 
@@ -198,6 +277,8 @@ function main() {
   }
 
   const inputPath = path.resolve(inputArg);
+  const outputPath = path.resolve(outputArg);
+
   const results = loadResultsFromInput(inputPath);
   const normalized = toNormalizedRecords(results, rulebook);
 
@@ -206,15 +287,12 @@ function main() {
     process.exit(1);
   }
 
-  const ranking = aggregateRanking(normalized);
+  const ranking = aggregateRanking(normalized, rulebook);
+  const payload = buildOutputPayload(inputArg, rulebook, normalized, ranking);
 
-  console.log(JSON.stringify({
-    rulebook: rulebook.id,
-    input: inputArg,
-    normalizedCount: normalized.length,
-    normalized,
-    ranking,
-  }, null, 2));
+  ensureParentDirectory(outputPath);
+  fs.writeFileSync(outputPath, JSON.stringify(payload, null, 2));
+  console.log(`Wrote ranking file: ${outputArg}`);
 }
 
 if (require.main === module) {
@@ -227,4 +305,5 @@ module.exports = {
   loadResultsFromInput,
   toNormalizedRecords,
   aggregateRanking,
+  buildOutputPayload,
 };
