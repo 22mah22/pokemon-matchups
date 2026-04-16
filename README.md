@@ -68,6 +68,98 @@ node scripts/rank-matchups.js \
   --output matchups/champions_ou_ranked.json
 ```
 
+## Return matchups for one Pokémon
+
+Use `return-matchups` to load matchup rows, apply a JSON rulebook, normalize everything to one selected Pokémon, and emit a deterministic best-to-worst list plus `total_score`.
+
+```bash
+node scripts/return-matchups.js return-matchups \
+  --matchups matchups/champions_ou_matchups.json \
+  --rulebook rulebooks/default-return-matchups-rulebook.json \
+  --pokemon Garchomp \
+  --output matchups/garchomp_return_matchups.json \
+  --trace
+```
+
+### Required flags
+
+- `--matchups <path>`: JSON input (preferred) or TXT via adapter.
+- `--rulebook <path>`: JSON rulebook file.
+- `--pokemon <name>`: selected Pokémon name.
+- `--output <path>`: output file path.
+
+### Matchup JSON schema
+
+Each matchup entry is normalized internally to:
+
+```json
+{
+  "attacker": "Garchomp",
+  "defender": "Corviknight",
+  "outcomeClass": "win",
+  "scoreContribution": 2,
+  "tags": ["OHKO", "SPEED_EDGE"]
+}
+```
+
+- `attacker`, `defender`: required strings.
+- `outcomeClass`: required enum (`win`, `loss`, `draw`, `neutral`).
+- `scoreContribution`: required number.
+- `tags`: optional string array used by rules.
+
+Legacy `.txt` and legacy JSON `results[]` are parsed through adapters to this schema.
+
+### Rulebook shape
+
+```json
+{
+  "id": "default_return_v1",
+  "name": "Default return-matchups rulebook",
+  "rules": [
+    {
+      "id": "boost-ohko",
+      "active": true,
+      "match": { "hasTag": "OHKO" },
+      "action": { "adjustScore": 1 }
+    }
+  ]
+}
+```
+
+Rule actions can:
+
+- `exclude`: remove a matchup row.
+- `adjustScore`: numeric delta added before ranking.
+- `setOutcomeClass`: override `outcomeClass`.
+- `addTags`: append tags.
+
+With `--trace`, output rows include `ruleTrace[]` so you can inspect what rules fired.
+
+### Output shape
+
+```json
+{
+  "selected_pokemon": "Garchomp",
+  "applied_rulebook": {
+    "id": "default_return_v1",
+    "name": "Default return-matchups rulebook"
+  },
+  "source_matchups": "matchups/champions_ou_matchups.json",
+  "generated_at": "2026-01-01T00:00:00.000Z",
+  "total_score": 5.5,
+  "matchups": [
+    {
+      "pokemon": "Garchomp",
+      "opponent": "Corviknight",
+      "outcomeClass": "win",
+      "scoreContribution": 2.5,
+      "tags": ["OHKO"],
+      "ruleTrace": []
+    }
+  ]
+}
+```
+
 ### GitHub Actions manual dispatch examples
 
 Run the **Rank Pokemon Matchups** workflow from the Actions tab with inputs such as:
