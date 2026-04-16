@@ -4,6 +4,13 @@ const path = require('node:path');
 const { Generations, Pokemon, Move, calculate } = require('@smogon/calc');
 
 const gen = Generations.get(9);
+const KILL_TIERS = {
+  OHKO_GUARANTEED: 'OHKO_GUARANTEED',
+  OHKO_POSSIBLE: 'OHKO_POSSIBLE',
+  HKO2_GUARANTEED: 'HKO2_GUARANTEED',
+  HKO2_POSSIBLE: 'HKO2_POSSIBLE',
+  WORSE: 'WORSE',
+};
 
 function parseStatLine(line, prefix) {
   const raw = line.slice(prefix.length).trim();
@@ -168,6 +175,46 @@ function validateSet(set) {
   }
 }
 
+function deriveKillFlags(damage, defenderHp) {
+  const minDamage = Math.max(0, Number(damage?.min) || 0);
+  const maxDamage = Math.max(0, Number(damage?.max) || 0);
+  const hp = Math.max(1, Number(defenderHp) || 1);
+
+  const ohkoGuaranteed = minDamage >= hp;
+  const ohkoPossible = maxDamage >= hp;
+  const hko2Guaranteed = minDamage * 2 >= hp;
+  const hko2Possible = maxDamage * 2 >= hp;
+
+  return {
+    ohkoGuaranteed,
+    ohkoPossible,
+    hko2Guaranteed,
+    hko2Possible,
+  };
+}
+
+function tierFromFlags(flags) {
+  if (flags.ohkoGuaranteed) return KILL_TIERS.OHKO_GUARANTEED;
+  if (flags.ohkoPossible) return KILL_TIERS.OHKO_POSSIBLE;
+  if (flags.hko2Guaranteed) return KILL_TIERS.HKO2_GUARANTEED;
+  if (flags.hko2Possible) return KILL_TIERS.HKO2_POSSIBLE;
+  return KILL_TIERS.WORSE;
+}
+
+function bestKillTierForMoves(moves) {
+  const order = [
+    KILL_TIERS.OHKO_GUARANTEED,
+    KILL_TIERS.OHKO_POSSIBLE,
+    KILL_TIERS.HKO2_GUARANTEED,
+    KILL_TIERS.HKO2_POSSIBLE,
+    KILL_TIERS.WORSE,
+  ];
+  const rank = new Map(order.map((tier, index) => [tier, index]));
+  return moves.reduce((best, move) => (
+    rank.get(move.killTier) < rank.get(best) ? move.killTier : best
+  ), KILL_TIERS.WORSE);
+}
+
 function calculateMatchups(sets) {
   const results = [];
   const skipped = [];
@@ -193,6 +240,7 @@ function calculateMatchups(sets) {
       const defender = pokemonCache.get(defenderSet.name);
       const attackerSpeed = attacker?.stats?.spe ?? attacker?.rawStats?.spe ?? 0;
       const defenderSpeed = defender?.stats?.spe ?? defender?.rawStats?.spe ?? 0;
+      const defenderHp = defender?.stats?.hp ?? defender?.rawStats?.hp ?? 1;
 
       const moveResults = attackerSet.moves.map((moveName) => {
         let move;
@@ -200,17 +248,25 @@ function calculateMatchups(sets) {
           move = new Move(gen, moveName);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          const damage = { min: 0, max: 0 };
+          const killFlags = deriveKillFlags(damage, defenderHp);
           return {
             move: moveName,
             desc: `Invalid move: ${message}`,
-            damage: { min: 0, max: 0 },
+            damage,
+            ...killFlags,
+            killTier: tierFromFlags(killFlags),
           };
         }
         if (move.category === 'Status') {
+          const damage = { min: 0, max: 0 };
+          const killFlags = deriveKillFlags(damage, defenderHp);
           return {
             move: moveName,
             desc: 'Status move (no direct damage).',
-            damage: { min: 0, max: 0 },
+            damage,
+            ...killFlags,
+            killTier: tierFromFlags(killFlags),
           };
         }
 
@@ -223,13 +279,18 @@ function calculateMatchups(sets) {
           description = 'No direct damage (likely immunity).';
         }
 
+        const damage = {
+          min: Array.isArray(range) ? range[0] : range,
+          max: Array.isArray(range) ? range[1] : range,
+        };
+        const killFlags = deriveKillFlags(damage, defenderHp);
+
         return {
           move: moveName,
           desc: description,
-          damage: {
-            min: Array.isArray(range) ? range[0] : range,
-            max: Array.isArray(range) ? range[1] : range,
-          },
+          damage,
+          ...killFlags,
+          killTier: tierFromFlags(killFlags),
         };
       });
 
@@ -239,6 +300,7 @@ function calculateMatchups(sets) {
         attackerSpeed,
         defenderSpeed,
         speedTie: attackerSpeed === defenderSpeed,
+        bestKillTier: bestKillTierForMoves(moveResults),
         moves: moveResults,
       });
     }
