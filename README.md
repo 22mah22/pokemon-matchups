@@ -171,6 +171,17 @@ Run the **Rank Pokemon Matchups** workflow from the Actions tab with inputs such
 
 When `commit_and_push` is `true`, the workflow stages only the selected `output_file`, commits only if there is a staged diff, and pushes to the current branch (`github.ref_name`).
 
+Run the **Return Matchups For One Pokemon** workflow from the Actions tab with inputs such as:
+
+- `matchups_file`: `matchups/champions_ou_matchups.json`
+- `rulebook_file`: `rulebooks/default-return-matchups-rulebook.json`
+- `pokemon`: `Garchomp`
+- `output_file`: `matchups/garchomp_return_matchups.json`
+- `trace`: `false` (set `true` to include `ruleTrace[]`)
+- `commit_and_push`: `true` (or `false` to artifact-only)
+
+When `commit_and_push` is `true`, this workflow stages only the selected `output_file`, commits only if there is a staged diff, and pushes to the current branch (`github.ref_name`).
+
 ### Rulebooks
 
 Current rulebook IDs:
