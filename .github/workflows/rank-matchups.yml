@@ -1,0 +1,71 @@
+name: Rank Pokemon Matchups
+
+on:
+  workflow_dispatch:
+    inputs:
+      input_file:
+        description: "Path to a matchup or library input file (for example: matchups/champions_ou_matchups.json)"
+        required: true
+        default: "matchups/champions_ou_matchups.json"
+      rulebook:
+        description: "Rulebook id to score matchups (for example: standard_v1)"
+        required: true
+      output_file:
+        description: "Path to write ranking output JSON"
+        required: true
+        default: "matchups/champions_ou_ranked.json"
+      commit_and_push:
+        description: "Commit and push ranking output back to the branch"
+        required: false
+        default: "true"
+
+jobs:
+  rank-matchups:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rank matchup file
+        env:
+          INPUT_FILE: ${{ github.event.inputs.input_file }}
+          RULEBOOK: ${{ github.event.inputs.rulebook }}
+          OUTPUT_FILE: ${{ github.event.inputs.output_file }}
+        run: |
+          node scripts/rank-matchups.js --input "$INPUT_FILE" --rulebook "$RULEBOOK" --output "$OUTPUT_FILE"
+
+      - name: Commit and push ranking output (optional)
+        if: ${{ github.event.inputs.commit_and_push == 'true' }}
+        env:
+          OUTPUT_FILE: ${{ github.event.inputs.output_file }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add "$OUTPUT_FILE"
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update ranked matchups output"
+          git push origin "${{ github.ref_name }}"
+
+      - name: Upload ranking output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ranked_matchups_output
+          path: ${{ github.event.inputs.output_file }}
