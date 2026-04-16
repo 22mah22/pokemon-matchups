@@ -300,6 +300,107 @@ function normalizePerspective(matchups, pokemon) {
     });
 }
 
+function pairKeyDirectional(attackerId, defenderId) {
+  return `${normalizeName(attackerId).toLowerCase()}->${normalizeName(defenderId).toLowerCase()}`;
+}
+
+function pairKeyUnordered(firstId, secondId) {
+  return [normalizeName(firstId).toLowerCase(), normalizeName(secondId).toLowerCase()].sort().join('::');
+}
+
+function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
+  if (rowsFromPerspective.length === 0) {
+    return {
+      pokemon,
+      opponent,
+      outcomeClass: 'draw',
+      scoreContribution: 0,
+      tags: ['PAIR_TIE'],
+      ruleTrace: [],
+      binaryResult: 0,
+      offset: 0,
+      calculationFromAttacker: 'self/tie',
+      calculationFromDefender: 'self/tie',
+    };
+  }
+
+  if (rowsFromPerspective.length === 1) {
+    const [row] = rowsFromPerspective;
+    return {
+      ...row,
+      binaryResult: row.scoreContribution > 0 ? 1 : row.scoreContribution < 0 ? -1 : 0,
+      offset: row.scoreContribution,
+      calculationFromAttacker: row.outcomeClass,
+      calculationFromDefender: 'missing',
+    };
+  }
+
+  const [first, second] = rowsFromPerspective;
+  const averagedScore = (first.scoreContribution + second.scoreContribution) / 2;
+  const mergedTags = [...new Set([...first.tags, ...second.tags, 'PAIR_NORMALIZED'])];
+  const mergedRuleTrace = [...first.ruleTrace, ...second.ruleTrace];
+
+  return {
+    pokemon,
+    opponent,
+    outcomeClass: averagedScore > 0 ? 'win' : averagedScore < 0 ? 'loss' : 'draw',
+    scoreContribution: averagedScore,
+    tags: mergedTags,
+    ruleTrace: mergedRuleTrace,
+    binaryResult: averagedScore > 0 ? 1 : averagedScore < 0 ? -1 : 0,
+    offset: averagedScore,
+    calculationFromAttacker: first.outcomeClass,
+    calculationFromDefender: second.outcomeClass,
+  };
+}
+
+function buildPairwiseRowsForSelectedPokemon(matchups, pokemon) {
+  const selectedPokemon = normalizeName(pokemon);
+  const wanted = selectedPokemon.toLowerCase();
+
+  const directionalRows = new Map();
+  for (const row of matchups) {
+    directionalRows.set(pairKeyDirectional(row.attacker, row.defender), row);
+  }
+
+  const opponentsByKey = new Map();
+  for (const row of matchups) {
+    const attackerId = row.attacker.toLowerCase();
+    const defenderId = row.defender.toLowerCase();
+    if (attackerId === wanted) {
+      opponentsByKey.set(defenderId, row.defender);
+    }
+    if (defenderId === wanted) {
+      opponentsByKey.set(attackerId, row.attacker);
+    }
+  }
+  opponentsByKey.set(wanted, selectedPokemon);
+
+  const emittedPairs = new Set();
+  const rows = [];
+
+  for (const [opponentKey, opponentName] of opponentsByKey.entries()) {
+    const pairKey = pairKeyUnordered(wanted, opponentKey);
+    if (emittedPairs.has(pairKey)) continue;
+    emittedPairs.add(pairKey);
+
+    const forward = directionalRows.get(pairKeyDirectional(selectedPokemon, opponentName));
+    const reverse = directionalRows.get(pairKeyDirectional(opponentName, selectedPokemon));
+
+    if (!forward && !reverse) {
+      rows.push(normalizePairRows([], selectedPokemon, opponentName));
+      continue;
+    }
+
+    const directional = [];
+    if (forward) directional.push(normalizePerspective([forward], selectedPokemon)[0]);
+    if (reverse) directional.push(normalizePerspective([reverse], selectedPokemon)[0]);
+    rows.push(normalizePairRows(directional, selectedPokemon, opponentName));
+  }
+
+  return rows;
+}
+
 function isOhkoOutcome(entry) {
   return entry.tags.includes('OHKO') || entry.tags.some((tag) => /^KILL_TIER_OHKO/.test(tag));
 }
@@ -358,7 +459,7 @@ function runReturnMatchups(argv = process.argv) {
   const matchups = loadMatchups(matchupsPath);
   const rulebook = loadRulebook(rulebookPath);
   const ruled = applyRulebook(matchups, rulebook, args.trace);
-  const perspective = normalizePerspective(ruled, args.pokemon);
+  const perspective = buildPairwiseRowsForSelectedPokemon(ruled, args.pokemon);
   const sorted = sortMatchups(perspective);
   const payload = buildOutput({ pokemon: normalizeName(args.pokemon), rulebook, sortedMatchups: sorted, sourcePath: args.matchupsPath });
 
@@ -390,6 +491,8 @@ module.exports = {
   loadRulebook,
   applyRulebook,
   normalizePerspective,
+  pairKeyUnordered,
+  buildPairwiseRowsForSelectedPokemon,
   sortMatchups,
   buildOutput,
   runReturnMatchups,
