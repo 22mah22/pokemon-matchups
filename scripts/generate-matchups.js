@@ -395,4 +395,15 @@ function main() {
   console.log(`Generated:\n- ${outJsonPath}\n- ${outTxtPath}`);
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  KILL_TIERS,
+  parseShowdownSets,
+  parseSetsFromJsonLibrary,
+  parseLibrarySets,
+  calculateMatchups,
+  compareResultsByRulebook,
+};
