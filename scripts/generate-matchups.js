@@ -191,6 +191,8 @@ function calculateMatchups(sets) {
       const defenderSet = validSets[j];
       const attacker = pokemonCache.get(attackerSet.name);
       const defender = pokemonCache.get(defenderSet.name);
+      const attackerSpeed = attacker?.stats?.spe ?? attacker?.rawStats?.spe ?? 0;
+      const defenderSpeed = defender?.stats?.spe ?? defender?.rawStats?.spe ?? 0;
 
       const moveResults = attackerSet.moves.map((moveName) => {
         let move;
@@ -234,6 +236,9 @@ function calculateMatchups(sets) {
       results.push({
         attacker: attackerSet.name,
         defender: defenderSet.name,
+        attackerSpeed,
+        defenderSpeed,
+        speedTie: attackerSpeed === defenderSpeed,
         moves: moveResults,
       });
     }
@@ -246,6 +251,7 @@ function toText(results) {
   const lines = [];
   for (const result of results) {
     lines.push(`${result.attacker} -> ${result.defender}`);
+    lines.push(`  Speed: ${result.attackerSpeed} vs ${result.defenderSpeed}${result.speedTie ? ' (tie)' : ''}`);
     for (const move of result.moves) {
       lines.push(`  - ${move.move}: ${move.damage.min}-${move.damage.max}`);
       lines.push(`    ${move.desc}`);
