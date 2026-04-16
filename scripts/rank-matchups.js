@@ -207,7 +207,8 @@ function aggregateRanking(normalized, rulebook) {
     else if (record.result === 'lose') row.losses += 1;
     else row.ties += 1;
 
-    row.score += rulebook.scoring[record.result] ?? 0;
+    const scoringResult = record.result === 'lose' ? 'loss' : record.result;
+    row.score += rulebook.scoring[scoringResult] ?? 0;
     row.total += 1;
   }
 
