@@ -72,17 +72,19 @@ test('rulebook can exclude and adjust scoring', () => withTempDir((dir) => {
   assert.equal(ruled[0].ruleTrace.length, 1);
 }));
 
-test('sorting keeps OHKO wins on top and OHKO losses at bottom', () => {
+test('sorting is driven by calculationOffset descending', () => {
   const sorted = sortMatchups([
-    { opponent: 'B', result: 0, scoreContribution: -1, tags: [] },
-    { opponent: 'C', result: 0, scoreContribution: -5, tags: ['OHKO'] },
-    { opponent: 'A', result: 1, scoreContribution: 2, tags: [] },
-    { opponent: 'D', result: 1, scoreContribution: 1, tags: ['OHKO'] },
-    { opponent: 'E', result: 0, scoreContribution: 0, tags: [] },
+    { opponent: 'Delta', result: 1, scoreContribution: 5, calculationOffset: 2, tags: ['OHKO'] },
+    { opponent: 'Alpha', result: 0, scoreContribution: 1, calculationOffset: 2, tags: [] },
+    { opponent: 'Bravo', result: 1, scoreContribution: 3, calculationOffset: 0, tags: [] },
+    { opponent: 'Echo', result: 1, scoreContribution: 9, calculationOffset: -1, tags: [] },
+    { opponent: 'Charlie', result: 0, scoreContribution: -10, calculationOffset: -4, tags: ['OHKO'] },
   ]);
 
-  assert.equal(sorted[0].opponent, 'D');
-  assert.equal(sorted.at(-1).opponent, 'C');
+  assert.deepEqual(
+    sorted.map((row) => row.opponent),
+    ['Alpha', 'Delta', 'Bravo', 'Echo', 'Charlie'],
+  );
 });
 
 test('total score is computed after perspective normalization', () => {
@@ -119,4 +121,18 @@ test('pairwise rows emit one row per opponent and synthesize self when missing',
   assert.equal(self.offset, 0);
   assert.equal(self.calculationFromAttacker, 0);
   assert.equal(self.calculationFromDefender, 0);
+});
+
+test('pairwise rows include self row as tie with zero offset', () => {
+  const rows = buildPairwiseRowsForSelectedPokemon([
+    { attacker: 'Pikachu', defender: 'Charizard', outcomeClass: 'win', scoreContribution: 1, tags: [], ruleTrace: [] },
+    { attacker: 'Charizard', defender: 'Pikachu', outcomeClass: 'loss', scoreContribution: -1, tags: [], ruleTrace: [] },
+  ], 'Pikachu');
+
+  const self = rows.find((row) => row.opponent === 'Pikachu');
+  assert.ok(self);
+  assert.equal(self.result, 0);
+  assert.equal(self.calculationOffset, 0);
+  assert.equal(self.directionalOutcomeClassFromAttacker, 'self/tie');
+  assert.equal(self.directionalOutcomeClassFromDefender, 'self/tie');
 });

@@ -494,20 +494,18 @@ function isOhkoOutcome(entry) {
 }
 
 function sortMatchups(matchups) {
-  const group = (entry) => {
-    const ohko = isOhkoOutcome(entry);
-    if (entry.result === 1 && ohko) return 0;
-    if (entry.result === 1) return 1;
-    if (entry.scoreContribution < 0 && ohko) return 4;
-    if (entry.scoreContribution < 0) return 3;
-    return 2;
+  const getCalculationOffset = (entry) => {
+    if (Number.isFinite(entry.calculationOffset)) return entry.calculationOffset;
+    if (Number.isFinite(entry.offset)) return entry.offset;
+    return Number.isFinite(entry.scoreContribution) ? entry.scoreContribution : 0;
   };
 
   return [...matchups].sort((a, b) => (
-    (group(a) - group(b))
-    || (b.scoreContribution - a.scoreContribution)
+    (getCalculationOffset(b) - getCalculationOffset(a))
     || a.opponent.localeCompare(b.opponent)
     || ((b.result ?? 0) - (a.result ?? 0))
+    || (b.scoreContribution - a.scoreContribution)
+    || ((isOhkoOutcome(b) ? 1 : 0) - (isOhkoOutcome(a) ? 1 : 0))
   ));
 }
 
