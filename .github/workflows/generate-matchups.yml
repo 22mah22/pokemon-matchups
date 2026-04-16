@@ -1,0 +1,51 @@
+name: Generate Pokemon Matchups
+
+on:
+  workflow_dispatch:
+    inputs:
+      library_file:
+        description: "Path to a showdown library file in this repo (for example: libraries/test_set_1.txt)"
+        required: true
+        default: "libraries/test_set_1.txt"
+
+jobs:
+  generate-matchups:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate matchup files
+        env:
+          LIBRARY_FILE: ${{ github.event.inputs.library_file }}
+        run: |
+          node scripts/generate-matchups.js "$LIBRARY_FILE"
+
+      - name: Upload matchup outputs
+        env:
+          LIBRARY_FILE: ${{ github.event.inputs.library_file }}
+        run: |
+          BASE_NAME="$(basename "$LIBRARY_FILE" .txt)"
+          echo "BASE_NAME=$BASE_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload JSON output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BASE_NAME }}_matchups_json
+          path: matchups/${{ env.BASE_NAME }}_matchups.json
+
+      - name: Upload text output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BASE_NAME }}_matchups_txt
+          path: matchups/${{ env.BASE_NAME }}_matchups.txt

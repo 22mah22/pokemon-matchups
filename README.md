@@ -23,3 +23,12 @@ This reads Showdown import sets from `libraries/*.txt` and writes matchup output
 - `matchups/test_set_1_matchups.txt`
 - `matchups/test_set_2_matchups.json`
 - `matchups/test_set_2_matchups.txt`
+
+## GitHub Actions job
+
+Run the **Generate Pokemon Matchups** workflow from the Actions tab and provide a library file path (for example `libraries/champions_ou.txt`).
+
+The workflow runs `scripts/generate-matchups.js` against that library and uploads both generated files as artifacts:
+
+- `matchups/<library>_matchups.json`
+- `matchups/<library>_matchups.txt`
