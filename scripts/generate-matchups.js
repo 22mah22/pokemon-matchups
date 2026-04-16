@@ -80,11 +80,79 @@ function parseShowdownSets(text) {
     });
 }
 
+function hasDetailedSetData(set) {
+  return Boolean(
+    set.item
+    || set.ability
+    || set.nature
+    || set.moves.length > 0
+    || Object.keys(set.evs).length > 0
+    || Object.keys(set.ivs).length > 0
+  );
+}
+
+function parseSetsFromJsonLibrary(jsonPath, speciesFilter = null) {
+  const raw = fs.readFileSync(jsonPath, 'utf8');
+  const parsed = JSON.parse(raw);
+  if (!parsed || !Array.isArray(parsed.sets)) {
+    return [];
+  }
+
+  const wanted = speciesFilter ? new Set(speciesFilter) : null;
+  const out = [];
+
+  for (const entry of parsed.sets) {
+    if (!entry || typeof entry.set !== 'string') continue;
+    const parsedSets = parseShowdownSets(entry.set);
+    if (parsedSets.length === 0) continue;
+    const parsedSet = parsedSets[0];
+    const species = entry.pokemon || parsedSet.species;
+    if (wanted && !wanted.has(species)) continue;
+    out.push({
+      ...parsedSet,
+      name: species,
+      species,
+    });
+  }
+
+  return out;
+}
+
+function parseLibrarySets(inputPath) {
+  const ext = path.extname(inputPath).toLowerCase();
+  const file = fs.readFileSync(inputPath, 'utf8');
+
+  if (ext === '.json') {
+    return parseSetsFromJsonLibrary(inputPath);
+  }
+
+  const parsed = parseShowdownSets(file);
+  const hasAnyDetailedData = parsed.some(hasDetailedSetData);
+  if (hasAnyDetailedData) {
+    return parsed;
+  }
+
+  const companionJson = path.join(path.dirname(inputPath), `${path.basename(inputPath, ext)}.json`);
+  if (!fs.existsSync(companionJson)) {
+    return parsed;
+  }
+
+  const species = parsed.map((set) => set.species);
+  const enriched = parseSetsFromJsonLibrary(companionJson, species);
+  return enriched.length > 0 ? enriched : parsed;
+}
+
 function toPokemon(set) {
+  const normalizeTextField = (value) => (
+    typeof value === 'string' && value.trim().toLowerCase() === 'none'
+      ? undefined
+      : value
+  );
+
   return new Pokemon(gen, set.species, {
-    item: set.item,
-    ability: set.ability,
-    nature: set.nature,
+    item: normalizeTextField(set.item),
+    ability: normalizeTextField(set.ability),
+    nature: normalizeTextField(set.nature),
     evs: set.evs,
     ivs: set.ivs,
     moves: set.moves,
@@ -125,7 +193,17 @@ function calculateMatchups(sets) {
       const defender = pokemonCache.get(defenderSet.name);
 
       const moveResults = attackerSet.moves.map((moveName) => {
-        const move = new Move(gen, moveName);
+        let move;
+        try {
+          move = new Move(gen, moveName);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          return {
+            move: moveName,
+            desc: `Invalid move: ${message}`,
+            damage: { min: 0, max: 0 },
+          };
+        }
         if (move.category === 'Status') {
           return {
             move: moveName,
@@ -189,8 +267,7 @@ function main() {
   const outJsonPath = path.resolve('matchups', `${baseName}_matchups.json`);
   const outTxtPath = path.resolve('matchups', `${baseName}_matchups.txt`);
 
-  const file = fs.readFileSync(inputPath, 'utf8');
-  const sets = parseShowdownSets(file);
+  const sets = parseLibrarySets(inputPath);
   const { results, skipped } = calculateMatchups(sets);
 
   fs.mkdirSync(path.dirname(outJsonPath), { recursive: true });
