@@ -1,7 +1,24 @@
 {
   "id": "kill-tier-speed-priority-v1",
   "name": "Kill Tier Speed Priority Rank Matchups Rulebook",
-  "description": "Legacy alias of standard_v1; compare best kill tier, speed edge, then damaging priority.",
+  "description": "Legacy alias of standard_v1; compare OHKO, guaranteed 2HKO, then potential 2HKO with speed tie-breakers.",
+  "outcomeRules": [
+    {
+      "id": "ohko",
+      "metric": "canOhko",
+      "speedTiebreak": true
+    },
+    {
+      "id": "hko2-guaranteed",
+      "metric": "canGuaranteed2hko",
+      "speedTiebreak": true
+    },
+    {
+      "id": "hko2-potential",
+      "metric": "canPossible2hko",
+      "speedTiebreak": true
+    }
+  ],
   "scoring": {
     "win": 3,
     "tie": 1,

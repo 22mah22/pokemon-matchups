@@ -3,7 +3,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {
   KILL_TIERS,
-  compareResultsByRulebook,
   parseLibrarySets,
   calculateMatchups,
 } = require('./generate-matchups');
@@ -66,11 +65,21 @@ function loadRulebook(rulebookPath) {
     throw new Error('Rulebook scoring must include numeric win, tie, and loss values.');
   }
 
+  const defaultOutcomeRules = [
+    { id: 'ohko', metric: 'canOhko', speedTiebreak: true },
+    { id: 'hko2-guaranteed', metric: 'canGuaranteed2hko', speedTiebreak: true },
+    { id: 'hko2-potential', metric: 'canPossible2hko', speedTiebreak: true },
+  ];
+
+  const outcomeRules = Array.isArray(parsed.outcomeRules) && parsed.outcomeRules.length > 0
+    ? parsed.outcomeRules
+    : defaultOutcomeRules;
+
   return {
     id,
     description,
     scoring: normalizedScoring,
-    compareDirections: compareResultsByRulebook,
+    outcomeRules,
   };
 }
 
@@ -94,7 +103,9 @@ function toDirectionalEntries(results, rulebook) {
           bestKillTier: entry.bestKillTier || KILL_TIERS.WORSE,
           bestKillTierRank: KILL_TIER_ORDER.get(entry.bestKillTier || KILL_TIERS.WORSE),
           speedAdvantage,
-          hasDamagingPriorityMove: Boolean(entry.hasDamagingPriorityMove),
+          canOhko: entry.moves?.some((move) => move?.ohkoPossible === true) || false,
+          canGuaranteed2hko: entry.moves?.some((move) => move?.hko2Guaranteed === true) || false,
+          canPossible2hko: entry.moves?.some((move) => move?.hko2Possible === true) || false,
           source: 'directional-matchup',
         },
       };
@@ -104,26 +115,24 @@ function toDirectionalEntries(results, rulebook) {
 function evaluatePair(first, second, rulebook) {
   if (!first || !second) return ['tie', 'tie'];
 
-  const firstShape = {
-    attacker: first.pokemon.name,
-    defender: first.opponent.name,
-    bestKillTier: first.metadata.bestKillTier,
-    attackerSpeed: first.metadata.speedAdvantage,
-    defenderSpeed: 0,
-    hasDamagingPriorityMove: first.metadata.hasDamagingPriorityMove,
-  };
-  const secondShape = {
-    attacker: second.pokemon.name,
-    defender: second.opponent.name,
-    bestKillTier: second.metadata.bestKillTier,
-    attackerSpeed: second.metadata.speedAdvantage,
-    defenderSpeed: 0,
-    hasDamagingPriorityMove: second.metadata.hasDamagingPriorityMove,
-  };
+  for (const step of rulebook.outcomeRules) {
+    const metric = normalizeName(step?.metric);
+    if (!metric) continue;
 
-  const compared = rulebook.compareDirections(firstShape, secondShape);
-  if (compared < 0) return ['win', 'lose'];
-  if (compared > 0) return ['lose', 'win'];
+    const firstCan = Boolean(first.metadata?.[metric]);
+    const secondCan = Boolean(second.metadata?.[metric]);
+
+    if (firstCan && !secondCan) return ['win', 'lose'];
+    if (!firstCan && secondCan) return ['lose', 'win'];
+
+    if (firstCan && secondCan && Boolean(step?.speedTiebreak)) {
+      const firstSpeedAdvantage = Number(first.metadata?.speedAdvantage) || 0;
+      const secondSpeedAdvantage = Number(second.metadata?.speedAdvantage) || 0;
+      if (firstSpeedAdvantage > secondSpeedAdvantage) return ['win', 'lose'];
+      if (firstSpeedAdvantage < secondSpeedAdvantage) return ['lose', 'win'];
+    }
+  }
+
   return ['tie', 'tie'];
 }
 

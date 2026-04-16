@@ -190,7 +190,15 @@ Included ranking rulebook files:
 
 - `rulebooks/standard-rank-matchups-rulebook.json` (win/tie/loss = 3/1/0)
 - `rulebooks/zero-sum-rank-matchups-rulebook.json` (win/tie/loss = 1/0/-1)
-- `rulebooks/kill-tier-speed-priority-rank-matchups-rulebook.json` (legacy standard scoring)
+- `rulebooks/kill-tier-speed-priority-rank-matchups-rulebook.json` (legacy alias for the standard ruleset)
+
+Each ranking rulebook can include `outcomeRules[]` to define how each head-to-head matchup is resolved before scoring:
+
+- `canOhko`: if only one side can OHKO, it wins; if both can OHKO, faster side wins
+- `canGuaranteed2hko`: if neither side settled on OHKO, apply the same logic for guaranteed 2HKO
+- `canPossible2hko`: if still unresolved, apply the same logic for potential 2HKO
+
+If no outcome rule settles the matchup, it is a tie.
 
 ### Ranked output shape
 
@@ -209,7 +217,7 @@ Example shape:
 {
   "rulebook": {
     "id": "standard_v1",
-    "description": "Scores each normalized result as win=3, tie=1, loss=0.",
+    "description": "Wins/losses are resolved by OHKO, then guaranteed 2HKO, then potential 2HKO (speed breaks equal-threat ties). Scores win=3, tie=1, loss=0.",
     "scoring": { "win": 3, "tie": 1, "loss": 0 }
   },
   "generatedAt": "2026-01-01T00:00:00.000Z",
