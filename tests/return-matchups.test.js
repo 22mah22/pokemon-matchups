@@ -9,6 +9,7 @@ const {
   loadRulebook,
   applyRulebook,
   normalizePerspective,
+  buildPairwiseRowsForSelectedPokemon,
   sortMatchups,
   buildOutput,
 } = require('../scripts/return-matchups');
@@ -99,4 +100,24 @@ test('total score is computed after perspective normalization', () => {
   });
 
   assert.equal(payload.total_score, 1);
+});
+
+test('pairwise rows emit one row per opponent and synthesize self when missing', () => {
+  const rows = buildPairwiseRowsForSelectedPokemon([
+    { attacker: 'Pikachu', defender: 'A', outcomeClass: 'win', scoreContribution: 2, tags: [], ruleTrace: [] },
+    { attacker: 'A', defender: 'Pikachu', outcomeClass: 'loss', scoreContribution: -2, tags: [], ruleTrace: [] },
+    { attacker: 'B', defender: 'Pikachu', outcomeClass: 'win', scoreContribution: 3, tags: [], ruleTrace: [] },
+  ], 'Pikachu');
+
+  assert.equal(rows.length, 3);
+  assert.equal(rows.filter((row) => row.opponent === 'A').length, 1);
+
+  const self = rows.find((row) => row.opponent === 'Pikachu');
+  assert.ok(self);
+  assert.equal(self.outcomeClass, 'draw');
+  assert.equal(self.scoreContribution, 0);
+  assert.equal(self.binaryResult, 0);
+  assert.equal(self.offset, 0);
+  assert.equal(self.calculationFromAttacker, 'self/tie');
+  assert.equal(self.calculationFromDefender, 'self/tie');
 });
