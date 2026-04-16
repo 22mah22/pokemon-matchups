@@ -41,6 +41,56 @@ const RULEBOOKS = {
   },
 };
 
+function validateRulebook(rulebook, sourceLabel = 'rulebook') {
+  if (!rulebook || typeof rulebook !== 'object') {
+    throw new Error(`Invalid ${sourceLabel}: expected an object.`);
+  }
+
+  const id = normalizeName(rulebook.id || rulebook.name);
+  if (!id) {
+    throw new Error(`Invalid ${sourceLabel}: missing "id" (or "name").`);
+  }
+
+  const description = normalizeName(rulebook.description || `${id} rulebook`);
+  const scoring = rulebook.scoring && typeof rulebook.scoring === 'object' ? rulebook.scoring : {};
+  const win = Number(scoring.win);
+  const tie = Number(scoring.tie);
+  const loss = Number(scoring.loss);
+
+  if (![win, tie, loss].every(Number.isFinite)) {
+    throw new Error(`Invalid ${sourceLabel}: scoring.win, scoring.tie, and scoring.loss must be numeric.`);
+  }
+
+  return {
+    id,
+    description,
+    scoring: { win, tie, loss },
+    compareDirections: compareResultsByRulebook,
+  };
+}
+
+function loadRulebookFromJson(rulebookPath) {
+  const raw = fs.readFileSync(rulebookPath, 'utf8');
+  const parsed = JSON.parse(raw);
+  return validateRulebook(parsed, `rulebook file "${rulebookPath}"`);
+}
+
+function loadRulebook(rulebookArg) {
+  const asPath = path.resolve(rulebookArg);
+  if (fs.existsSync(asPath) && path.extname(asPath).toLowerCase() === '.json') {
+    return loadRulebookFromJson(asPath);
+  }
+
+  const builtIn = RULEBOOKS[rulebookArg];
+  if (builtIn) {
+    return validateRulebook(builtIn, `built-in rulebook "${rulebookArg}"`);
+  }
+
+  throw new Error(
+    `Unknown rulebook "${rulebookArg}". Provide a JSON rulebook path or one of: ${Object.keys(RULEBOOKS).join(', ') || '(none)'}`,
+  );
+}
+
 const KILL_TIER_ORDER = new Map([
   KILL_TIERS.OHKO_GUARANTEED,
   KILL_TIERS.OHKO_POSSIBLE,
@@ -266,13 +316,15 @@ function buildOutputPayload(inputArg, rulebook, normalized, ranking) {
 function main() {
   const { inputPath: inputArg, rulebookId, outputPath: outputArg } = parseArgs(process.argv);
   if (!inputArg || !rulebookId || !outputArg) {
-    console.error('Usage: node scripts/rank-matchups.js --input <path> --rulebook <id> --output <path>');
+    console.error('Usage: node scripts/rank-matchups.js --input <path> --rulebook <id-or-json-path> --output <path>');
     process.exit(1);
   }
 
-  const rulebook = RULEBOOKS[rulebookId];
-  if (!rulebook) {
-    console.error(`Unknown rulebook id "${rulebookId}". Available: ${Object.keys(RULEBOOKS).join(', ') || '(none)'}`);
+  let rulebook;
+  try {
+    rulebook = loadRulebook(rulebookId);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 
@@ -301,6 +353,9 @@ if (require.main === module) {
 
 module.exports = {
   RULEBOOKS,
+  validateRulebook,
+  loadRulebookFromJson,
+  loadRulebook,
   parseArgs,
   loadResultsFromInput,
   toNormalizedRecords,

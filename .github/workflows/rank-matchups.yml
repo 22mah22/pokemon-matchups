@@ -8,8 +8,9 @@ on:
         required: true
         default: "matchups/champions_ou_matchups.json"
       rulebook:
-        description: "Rulebook id to score matchups (for example: standard_v1)"
+        description: "Rulebook JSON file path (for example: rulebooks/rank-matchups/standard_v1.json)"
         required: true
+        default: "rulebooks/rank-matchups/standard_v1.json"
       output_file:
         description: "Path to write ranking output JSON"
         required: true
@@ -44,6 +45,11 @@ jobs:
           RULEBOOK: ${{ github.event.inputs.rulebook }}
           OUTPUT_FILE: ${{ github.event.inputs.output_file }}
         run: |
+          if [ ! -f "$RULEBOOK" ]; then
+            echo "Rulebook file not found: $RULEBOOK"
+            exit 1
+          fi
+
           node scripts/rank-matchups.js --input "$INPUT_FILE" --rulebook "$RULEBOOK" --output "$OUTPUT_FILE"
 
       - name: Commit and push ranking output (optional)

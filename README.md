@@ -64,7 +64,7 @@ Ranking is handled by `scripts/rank-matchups.js`.
 ```bash
 node scripts/rank-matchups.js \
   --input matchups/champions_ou_matchups.json \
-  --rulebook standard_v1 \
+  --rulebook rulebooks/rank-matchups/standard_v1.json \
   --output matchups/champions_ou_ranked.json
 ```
 
@@ -160,12 +160,23 @@ With `--trace`, output rows include `ruleTrace[]` so you can inspect what rules 
 }
 ```
 
+### GitHub Actions manual dispatch example
+
+Run the **Return Pokemon Matchups** workflow from the Actions tab with inputs such as:
+
+- `matchups_file`: `matchups/champions_ou_matchups.json`
+- `rulebook`: `rulebooks/default-return-matchups-rulebook.json`
+- `pokemon`: `Garchomp`
+- `output_file`: `matchups/garchomp_return_matchups.json`
+- `trace`: `true` or `false`
+- `commit_and_push`: `true` (or `false` to artifact-only)
+
 ### GitHub Actions manual dispatch examples
 
 Run the **Rank Pokemon Matchups** workflow from the Actions tab with inputs such as:
 
 - `input_file`: `matchups/champions_ou_matchups.json`
-- `rulebook`: `standard_v1`
+- `rulebook`: `rulebooks/rank-matchups/standard_v1.json`
 - `output_file`: `matchups/champions_ou_ranked.json`
 - `commit_and_push`: `true` (or `false` to artifact-only)
 
@@ -173,11 +184,13 @@ When `commit_and_push` is `true`, the workflow stages only the selected `output_
 
 ### Rulebooks
 
-Current rulebook IDs:
+Ranking rulebooks now live as JSON files in `rulebooks/rank-matchups/`:
 
-- `standard_v1` (win/tie/loss = 3/1/0)
-- `zero_sum_v1` (win/tie/loss = 1/0/-1)
-- `kill-tier-speed-priority-v1` (legacy alias of `standard_v1` scoring)
+- `rulebooks/rank-matchups/standard_v1.json` (win/tie/loss = 3/1/0)
+- `rulebooks/rank-matchups/zero_sum_v1.json` (win/tie/loss = 1/0/-1)
+- `rulebooks/rank-matchups/kill-tier-speed-priority-v1.json` (legacy alias of `standard_v1` scoring)
+
+`scripts/rank-matchups.js` also accepts legacy built-in rulebook IDs for backward compatibility.
 
 ### Ranked output shape
 
