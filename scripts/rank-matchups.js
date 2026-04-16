@@ -8,39 +8,6 @@ const {
   calculateMatchups,
 } = require('./generate-matchups');
 
-const RULEBOOKS = {
-  standard_v1: {
-    id: 'standard_v1',
-    description: 'Scores each normalized result as win=3, tie=1, loss=0.',
-    scoring: {
-      win: 3,
-      tie: 1,
-      loss: 0,
-    },
-    compareDirections: compareResultsByRulebook,
-  },
-  zero_sum_v1: {
-    id: 'zero_sum_v1',
-    description: 'Scores each normalized result as win=1, tie=0, loss=-1.',
-    scoring: {
-      win: 1,
-      tie: 0,
-      loss: -1,
-    },
-    compareDirections: compareResultsByRulebook,
-  },
-  'kill-tier-speed-priority-v1': {
-    id: 'kill-tier-speed-priority-v1',
-    description: 'Legacy alias of standard_v1; compare best kill tier, speed edge, then damaging priority.',
-    scoring: {
-      win: 3,
-      tie: 1,
-      loss: 0,
-    },
-    compareDirections: compareResultsByRulebook,
-  },
-};
-
 const KILL_TIER_ORDER = new Map([
   KILL_TIERS.OHKO_GUARANTEED,
   KILL_TIERS.OHKO_POSSIBLE,
@@ -51,7 +18,7 @@ const KILL_TIER_ORDER = new Map([
 
 function parseArgs(argv) {
   let inputPath;
-  let rulebookId;
+  let rulebookPath;
   let outputPath;
 
   for (let i = 2; i < argv.length; i += 1) {
@@ -60,7 +27,7 @@ function parseArgs(argv) {
       inputPath = argv[i + 1];
       i += 1;
     } else if (token === '--rulebook') {
-      rulebookId = argv[i + 1];
+      rulebookPath = argv[i + 1];
       i += 1;
     } else if (token === '--output') {
       outputPath = argv[i + 1];
@@ -68,11 +35,43 @@ function parseArgs(argv) {
     }
   }
 
-  return { inputPath, rulebookId, outputPath };
+  return { inputPath, rulebookPath, outputPath };
 }
 
 function normalizeName(value) {
   return String(value || '').trim();
+}
+
+function loadRulebook(rulebookPath) {
+  const raw = fs.readFileSync(rulebookPath, 'utf8');
+  const parsed = JSON.parse(raw);
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Rulebook JSON must be an object.');
+  }
+
+  const id = normalizeName(parsed.id || parsed.name || path.basename(rulebookPath, path.extname(rulebookPath)));
+  const description = normalizeName(parsed.description || parsed.name || id);
+  const scoring = parsed.scoring && typeof parsed.scoring === 'object' ? parsed.scoring : {};
+
+  const normalizedScoring = {
+    win: Number(scoring.win),
+    tie: Number(scoring.tie),
+    loss: Number(scoring.loss),
+  };
+
+  if (!Number.isFinite(normalizedScoring.win)
+    || !Number.isFinite(normalizedScoring.tie)
+    || !Number.isFinite(normalizedScoring.loss)) {
+    throw new Error('Rulebook scoring must include numeric win, tie, and loss values.');
+  }
+
+  return {
+    id,
+    description,
+    scoring: normalizedScoring,
+    compareDirections: compareResultsByRulebook,
+  };
 }
 
 function toDirectionalEntries(results, rulebook) {
@@ -264,21 +263,17 @@ function buildOutputPayload(inputArg, rulebook, normalized, ranking) {
 }
 
 function main() {
-  const { inputPath: inputArg, rulebookId, outputPath: outputArg } = parseArgs(process.argv);
-  if (!inputArg || !rulebookId || !outputArg) {
-    console.error('Usage: node scripts/rank-matchups.js --input <path> --rulebook <id> --output <path>');
-    process.exit(1);
-  }
-
-  const rulebook = RULEBOOKS[rulebookId];
-  if (!rulebook) {
-    console.error(`Unknown rulebook id "${rulebookId}". Available: ${Object.keys(RULEBOOKS).join(', ') || '(none)'}`);
+  const { inputPath: inputArg, rulebookPath: rulebookArg, outputPath: outputArg } = parseArgs(process.argv);
+  if (!inputArg || !rulebookArg || !outputArg) {
+    console.error('Usage: node scripts/rank-matchups.js --input <path> --rulebook <path> --output <path>');
     process.exit(1);
   }
 
   const inputPath = path.resolve(inputArg);
+  const rulebookPath = path.resolve(rulebookArg);
   const outputPath = path.resolve(outputArg);
 
+  const rulebook = loadRulebook(rulebookPath);
   const results = loadResultsFromInput(inputPath);
   const normalized = toNormalizedRecords(results, rulebook);
 
@@ -300,8 +295,8 @@ if (require.main === module) {
 }
 
 module.exports = {
-  RULEBOOKS,
   parseArgs,
+  loadRulebook,
   loadResultsFromInput,
   toNormalizedRecords,
   aggregateRanking,

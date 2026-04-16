@@ -7,9 +7,10 @@ on:
         description: "Path to a matchup or library input file (for example: matchups/champions_ou_matchups.json)"
         required: true
         default: "matchups/champions_ou_matchups.json"
-      rulebook:
-        description: "Rulebook id to score matchups (for example: standard_v1)"
+      rulebook_file:
+        description: "Path to ranking rulebook JSON (for example: rulebooks/standard-rank-matchups-rulebook.json)"
         required: true
+        default: "rulebooks/standard-rank-matchups-rulebook.json"
       output_file:
         description: "Path to write ranking output JSON"
         required: true
@@ -41,10 +42,10 @@ jobs:
       - name: Rank matchup file
         env:
           INPUT_FILE: ${{ github.event.inputs.input_file }}
-          RULEBOOK: ${{ github.event.inputs.rulebook }}
+          RULEBOOK_FILE: ${{ github.event.inputs.rulebook_file }}
           OUTPUT_FILE: ${{ github.event.inputs.output_file }}
         run: |
-          node scripts/rank-matchups.js --input "$INPUT_FILE" --rulebook "$RULEBOOK" --output "$OUTPUT_FILE"
+          node scripts/rank-matchups.js --input "$INPUT_FILE" --rulebook "$RULEBOOK_FILE" --output "$OUTPUT_FILE"
 
       - name: Commit and push ranking output (optional)
         if: ${{ github.event.inputs.commit_and_push == 'true' }}
