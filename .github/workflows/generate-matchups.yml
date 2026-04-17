@@ -30,6 +30,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --ignore-scripts=false
+        # @smogon/calc is sourced from smogon/damage-calc and needs postinstall
+        # to wire its calc subpackage, so this workflow opts in explicitly.
 
       - name: Verify @smogon/calc dependency resolution
         run: |
