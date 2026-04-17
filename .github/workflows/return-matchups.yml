@@ -46,6 +46,36 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Rehydrate matchup JSON input (if committed as gzip/split)
+        env:
+          MATCHUPS_FILE: ${{ github.event.inputs.matchups_file }}
+        run: |
+          if [ -f "$MATCHUPS_FILE" ]; then
+            echo "Input file already present: $MATCHUPS_FILE"
+            exit 0
+          fi
+
+          case "$MATCHUPS_FILE" in
+            *.json)
+              GZ_FILE="${MATCHUPS_FILE}.gz"
+              PART_GLOB="${GZ_FILE}.part"*
+
+              if compgen -G "$PART_GLOB" > /dev/null; then
+                echo "Found split gzip parts for $MATCHUPS_FILE. Reassembling..."
+                cat $PART_GLOB > "$GZ_FILE"
+              fi
+
+              if [ -f "$GZ_FILE" ]; then
+                echo "Decompressing $GZ_FILE -> $MATCHUPS_FILE"
+                gzip -dc "$GZ_FILE" > "$MATCHUPS_FILE"
+                exit 0
+              fi
+              ;;
+          esac
+
+          echo "No usable input found for $MATCHUPS_FILE"
+          exit 1
+
       - name: Build single-Pokemon return-matchups output
         env:
           MATCHUPS_FILE: ${{ github.event.inputs.matchups_file }}
