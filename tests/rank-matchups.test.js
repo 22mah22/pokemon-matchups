@@ -5,8 +5,10 @@ const os = require('node:os');
 const path = require('node:path');
 
 const {
+  aggregateRanking,
   buildPokemonJustificationPayloads,
   sanitizePokemonFileName,
+  sortJustificationDecisionsByOpponentRanking,
   writePokemonJustificationFiles,
 } = require('../scripts/rank-matchups');
 
@@ -136,3 +138,50 @@ test('justification files include summary W/L and per-opponent decision trace fi
   assert.ok(Object.hasOwn(firstDecision.explanationTrace[0], 'secondSpeedAdvantage'));
   assert.ok(Object.hasOwn(firstDecision.explanationTrace[0], 'resolution'));
 }));
+
+test('sortJustificationDecisionsByOpponentRanking orders wins first and losses by highest ranked opponent', () => {
+  const normalized = [
+    {
+      pokemon: { id: 'a', name: 'A' },
+      opponent: { id: 'b', name: 'B' },
+      result: 'win',
+      metadata: {},
+      decisionTrace: [],
+    },
+    {
+      pokemon: { id: 'a', name: 'A' },
+      opponent: { id: 'c', name: 'C' },
+      result: 'win',
+      metadata: {},
+      decisionTrace: [],
+    },
+    {
+      pokemon: { id: 'a', name: 'A' },
+      opponent: { id: 'd', name: 'D' },
+      result: 'lose',
+      metadata: {},
+      decisionTrace: [],
+    },
+    {
+      pokemon: { id: 'a', name: 'A' },
+      opponent: { id: 'e', name: 'E' },
+      result: 'lose',
+      metadata: {},
+      decisionTrace: [],
+    },
+    { pokemon: { id: 'b', name: 'B' }, opponent: { id: 'a', name: 'A' }, result: 'lose', metadata: {}, decisionTrace: [] },
+    { pokemon: { id: 'c', name: 'C' }, opponent: { id: 'a', name: 'A' }, result: 'lose', metadata: {}, decisionTrace: [] },
+    { pokemon: { id: 'd', name: 'D' }, opponent: { id: 'a', name: 'A' }, result: 'win', metadata: {}, decisionTrace: [] },
+    { pokemon: { id: 'e', name: 'E' }, opponent: { id: 'a', name: 'A' }, result: 'win', metadata: {}, decisionTrace: [] },
+  ];
+  const rulebook = { scoring: { win: 1, tie: 0, loss: -1 } };
+  const ranking = aggregateRanking(normalized, rulebook);
+  const payloads = buildPokemonJustificationPayloads('fixtures/input.json', { id: 'rules', ...rulebook }, normalized);
+  const sorted = sortJustificationDecisionsByOpponentRanking(payloads, ranking);
+  const aPayload = sorted.find((item) => item.pokemon.id === 'a');
+
+  assert.deepEqual(
+    aPayload.decisions.map((decision) => `${decision.result}:${decision.opponent.name}`),
+    ['win:D', 'win:E', 'lose:B', 'lose:C'],
+  );
+});
