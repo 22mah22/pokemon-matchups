@@ -87,7 +87,7 @@ test('sorting is driven by calculationOffset descending', () => {
   );
 });
 
-test('total score is computed after perspective normalization', () => {
+test('total_wins counts only binary wins from output rows', () => {
   const normalized = normalizePerspective([
     { attacker: 'Pikachu', defender: 'A', outcomeClass: 'win', scoreContribution: 3, tags: [] },
     { attacker: 'B', defender: 'Pikachu', outcomeClass: 'win', scoreContribution: 2, tags: [] },
@@ -101,7 +101,31 @@ test('total score is computed after perspective normalization', () => {
     sourcePath: 'x.json',
   });
 
-  assert.equal(payload.total_score, 1);
+  assert.equal(payload.total_wins, 0);
+});
+
+test('output rows are binary and include calc output for both directions', () => {
+  const payload = buildOutput({
+    pokemon: 'Pikachu',
+    rulebook: { id: 'r1', name: 'Rulebook 1' },
+    sourcePath: 'x.json',
+    sortedMatchups: [{
+      pokemon: 'Pikachu',
+      opponent: 'Raichu',
+      result: 1,
+      calcOutputFromAttacker: '252 SpA Pikachu Thunderbolt vs. 0 HP / 0 SpD Raichu: 90-106 (31 - 36.5%) -- 72.6% chance to 3HKO',
+      calcOutputFromDefender: '252 SpA Raichu Thunderbolt vs. 0 HP / 0 SpD Pikachu: 93-110 (38.5 - 45.6%) -- guaranteed 3HKO',
+      directionalOutcomeClassFromAttacker: 'win',
+      directionalOutcomeClassFromDefender: 'loss',
+      ruleTrace: [{ ruleId: 'sample', excluded: false, scoreDelta: 0 }],
+    }],
+  });
+
+  assert.equal(payload.total_wins, 1);
+  assert.equal(payload.matchups[0].result, 1);
+  assert.ok(!Object.hasOwn(payload.matchups[0], 'scoreContribution'));
+  assert.equal(payload.matchups[0].calc_output.Pikachu_to_Raichu.includes('Pikachu Thunderbolt'), true);
+  assert.equal(payload.matchups[0].calc_output.Raichu_to_Pikachu.includes('Raichu Thunderbolt'), true);
 });
 
 test('pairwise rows emit one row per opponent and synthesize self when missing', () => {

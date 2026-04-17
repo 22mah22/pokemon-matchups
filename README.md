@@ -70,7 +70,7 @@ node scripts/rank-matchups.js \
 
 ## Return matchups for one Pokémon
 
-Use `return-matchups` to load matchup rows, apply a JSON rulebook, normalize everything to one selected Pokémon, and emit a deterministic best-to-worst list plus `total_score`.
+Use `return-matchups` to load matchup rows, apply a JSON rulebook, normalize everything to one selected Pokémon, and emit a deterministic best-to-worst list with binary outcomes.
 
 ```bash
 node scripts/return-matchups.js return-matchups \
@@ -135,6 +135,11 @@ Rule actions can:
 
 With `--trace`, output rows include `ruleTrace[]` so you can inspect what rules fired.
 
+Return output rows are intentionally compact:
+
+- `result` is binary (`1` = selected Pokémon wins, `0` = selected Pokémon does not win).
+- `calc_output` includes the Smogon-calc-style summary string for both directions so the rulebook can re-evaluate each pair without extra numeric fields.
+
 ### Output shape
 
 ```json
@@ -146,14 +151,20 @@ With `--trace`, output rows include `ruleTrace[]` so you can inspect what rules 
   },
   "source_matchups": "matchups/champions_ou_matchups.json",
   "generated_at": "2026-01-01T00:00:00.000Z",
-  "total_score": 5.5,
+  "total_wins": 12,
   "matchups": [
     {
       "pokemon": "Garchomp",
       "opponent": "Corviknight",
-      "outcomeClass": "win",
-      "scoreContribution": 2.5,
-      "tags": ["OHKO"],
+      "result": 1,
+      "calc_output": {
+        "Garchomp_to_Corviknight": "252 Atk Garchomp Earthquake vs. 0 HP / 0 Def Corviknight: ...",
+        "Corviknight_to_Garchomp": "252 Atk Corviknight Brave Bird vs. 0 HP / 0 Def Garchomp: ..."
+      },
+      "directional_outcomes": {
+        "from_attacker": "win",
+        "from_defender": "loss"
+      },
       "ruleTrace": []
     }
   ]

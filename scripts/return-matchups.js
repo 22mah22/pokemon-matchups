@@ -99,6 +99,7 @@ function validateMatchupEntry(entry, index) {
     outcomeClass,
     scoreContribution,
     tags,
+    calcOutput: normalizeName(entry.calcOutput),
   };
 }
 
@@ -146,12 +147,19 @@ function legacyResultToModel(entry) {
     tags.push(`KILL_TIER_${killTier}`);
   }
 
+  const calcOutput = Array.isArray(entry.moves)
+    ? entry.moves
+      .map((move) => normalizeName(move && move.desc))
+      .find((desc) => desc.includes(' vs. '))
+    : '';
+
   return {
     attacker,
     defender,
     outcomeClass,
     scoreContribution,
     tags,
+    calcOutput,
   };
 }
 
@@ -291,6 +299,7 @@ function normalizePerspective(matchups, pokemon) {
           scoreContribution: entry.scoreContribution,
           tags: entry.tags,
           ruleTrace: entry.ruleTrace || [],
+          calcOutput: entry.calcOutput || '',
         };
       }
 
@@ -303,6 +312,7 @@ function normalizePerspective(matchups, pokemon) {
         scoreContribution: entry.scoreContribution * -1,
         tags: entry.tags,
         ruleTrace: entry.ruleTrace || [],
+        calcOutput: entry.calcOutput || '',
       };
     });
 }
@@ -323,7 +333,7 @@ function pairKeyUnordered(firstId, secondId) {
   return [normalizeName(firstId).toLowerCase(), normalizeName(secondId).toLowerCase()].sort().join('::');
 }
 
-function createDirectionalCalculation({ attacker, defender, scoreContribution, outcomeClass, tags, ruleTrace, missing = false }) {
+function createDirectionalCalculation({ attacker, defender, scoreContribution, outcomeClass, tags, ruleTrace, calcOutput = '', missing = false }) {
   return {
     attacker: normalizeName(attacker),
     defender: normalizeName(defender),
@@ -331,6 +341,7 @@ function createDirectionalCalculation({ attacker, defender, scoreContribution, o
     outcomeClass: outcomeClass || 'neutral',
     tags: Array.isArray(tags) ? tags : [],
     ruleTrace: Array.isArray(ruleTrace) ? ruleTrace : [],
+    calcOutput: normalizeName(calcOutput),
     missing,
   };
 }
@@ -352,6 +363,7 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
       outcomeClass: forward.directionalOutcomeClass,
       tags: forward.tags,
       ruleTrace: forward.ruleTrace,
+      calcOutput: forward.calcOutput,
       missing: false,
     })
     : createDirectionalCalculation({
@@ -371,6 +383,7 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
       outcomeClass: reverse.directionalOutcomeClass,
       tags: reverse.tags,
       ruleTrace: reverse.ruleTrace,
+      calcOutput: reverse.calcOutput,
       missing: false,
     })
     : createDirectionalCalculation({
@@ -399,6 +412,8 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
       calculationOffset: 0,
       forwardCalculation,
       reverseCalculation,
+      calcOutputFromAttacker: forwardCalculation.calcOutput,
+      calcOutputFromDefender: reverseCalculation.calcOutput,
     };
   }
 
@@ -416,6 +431,8 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
       directionalOutcomeClassFromDefender: 'missing',
       forwardCalculation,
       reverseCalculation,
+      calcOutputFromAttacker: forwardCalculation.calcOutput,
+      calcOutputFromDefender: reverseCalculation.calcOutput,
     };
   }
 
@@ -439,6 +456,8 @@ function normalizePairRows(rowsFromPerspective, pokemon, opponent) {
     directionalOutcomeClassFromDefender: reverseCalculation.outcomeClass,
     forwardCalculation,
     reverseCalculation,
+    calcOutputFromAttacker: forwardCalculation.calcOutput,
+    calcOutputFromDefender: reverseCalculation.calcOutput,
   };
 }
 
@@ -510,19 +529,23 @@ function sortMatchups(matchups) {
 }
 
 function buildOutput({ pokemon, rulebook, sortedMatchups, sourcePath, includeLegacyFields = false }) {
-  const totalScore = sortedMatchups.reduce((sum, row) => sum + row.scoreContribution, 0);
+  const totalWins = sortedMatchups.reduce((sum, row) => sum + (row.result === 1 ? 1 : 0), 0);
   const matchups = sortedMatchups.map((row) => {
     if (includeLegacyFields) return row;
-
-    const {
-      directionalOutcomeClass,
-      directionalOutcomeClassFromAttacker,
-      directionalOutcomeClassFromDefender,
-      sourceAttacker,
-      sourceDefender,
-      ...withoutLegacy
-    } = row;
-    return withoutLegacy;
+    return {
+      pokemon: row.pokemon,
+      opponent: row.opponent,
+      result: row.result,
+      calc_output: {
+        [`${row.pokemon}_to_${row.opponent}`]: row.calcOutputFromAttacker || '',
+        [`${row.opponent}_to_${row.pokemon}`]: row.calcOutputFromDefender || '',
+      },
+      directional_outcomes: {
+        from_attacker: row.directionalOutcomeClassFromAttacker,
+        from_defender: row.directionalOutcomeClassFromDefender,
+      },
+      ruleTrace: row.ruleTrace,
+    };
   });
 
   return {
@@ -533,7 +556,7 @@ function buildOutput({ pokemon, rulebook, sortedMatchups, sourcePath, includeLeg
     },
     source_matchups: sourcePath,
     generated_at: new Date().toISOString(),
-    total_score: totalScore,
+    total_wins: totalWins,
     matchups,
   };
 }
