@@ -12,6 +12,8 @@ npm run matchups:test2
 
 This reads Showdown import sets from `libraries/*.txt` (with optional enrichment from companion `libraries/*.json`) and writes matchup outputs to `matchups/*_matchups.json` and `matchups/*_matchups.txt`.
 
+All damage/stat calculations are performed at **Level 50**.
+
 ### Install policy note
 
 The repo default is `ignore-scripts=true` in `.npmrc` to block lifecycle scripts during routine installs. `@smogon/calc` is consumed via the published alias `npm:@22mah22/calc@0.11.0-champions.0`, so workflows can run standard `npm ci` without manual subpackage bootstrap steps.
@@ -119,6 +121,7 @@ Legacy `.txt` and legacy JSON `results[]` are parsed through adapters to this sc
 {
   "id": "default_return_v1",
   "name": "Default return-matchups rulebook",
+  "battleLevel": 50,
   "rules": [
     {
       "id": "boost-ohko",
@@ -129,6 +132,8 @@ Legacy `.txt` and legacy JSON `results[]` are parsed through adapters to this sc
   ]
 }
 ```
+
+`battleLevel` documents the intended calculator level for this ruleset (current standard: `50`).
 
 Rule actions can:
 
@@ -233,6 +238,7 @@ Example shape:
   "rulebook": {
     "id": "standard_v1",
     "description": "Wins/losses are resolved by OHKO, then guaranteed 2HKO, then potential 2HKO (speed breaks equal-threat ties). Scores win=3, tie=1, loss=0.",
+    "battleLevel": 50,
     "scoring": { "win": 3, "tie": 1, "loss": 0 }
   },
   "generatedAt": "2026-01-01T00:00:00.000Z",
