@@ -1,11 +1,16 @@
 {
   "id": "standard_v1",
   "name": "Standard Rank Matchups Rulebook",
-  "description": "Wins/losses are resolved by OHKO, then guaranteed 2HKO, then potential 2HKO (speed breaks equal-threat ties). Scores win=3, tie=1, loss=0.",
+  "description": "Wins/losses are resolved by guaranteed OHKO, then potential OHKO, then guaranteed 2HKO, then potential 2HKO (speed breaks equal-threat ties). Scores win=3, tie=1, loss=0.",
   "outcomeRules": [
     {
-      "id": "ohko",
-      "metric": "canOhko",
+      "id": "ohko-guaranteed",
+      "metric": "canGuaranteedOhko",
+      "speedTiebreak": true
+    },
+    {
+      "id": "ohko-potential",
+      "metric": "canPossibleOhko",
       "speedTiebreak": true
     },
     {
