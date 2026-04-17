@@ -12,6 +12,10 @@ npm run matchups:test2
 
 This reads Showdown import sets from `libraries/*.txt` (with optional enrichment from companion `libraries/*.json`) and writes matchup outputs to `matchups/*_matchups.json` and `matchups/*_matchups.txt`.
 
+### Install policy note
+
+The repo default is `ignore-scripts=true` in `.npmrc` to block lifecycle scripts during routine installs. Matchup generation is a scoped exception: `@smogon/calc` is installed from `smogon/damage-calc` and requires its `postinstall` lifecycle script to wire the `calc` subpackage, so the generation workflow explicitly uses `npm ci --ignore-scripts=false`.
+
 ## File layout
 
 - `libraries/test_set_1.txt`
