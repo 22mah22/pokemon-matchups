@@ -4,6 +4,7 @@ const path = require('node:path');
 const { Generations, Pokemon, Move, calculate } = require('@smogon/calc');
 
 const gen = Generations.get(9);
+const DEFAULT_BATTLE_LEVEL = 50;
 const KILL_TIERS = {
   OHKO_GUARANTEED: 'OHKO_GUARANTEED',
   OHKO_POSSIBLE: 'OHKO_POSSIBLE',
@@ -149,7 +150,7 @@ function parseLibrarySets(inputPath) {
   return enriched.length > 0 ? enriched : parsed;
 }
 
-function toPokemon(set) {
+function toPokemon(set, battleLevel = DEFAULT_BATTLE_LEVEL) {
   const normalizeTextField = (value) => (
     typeof value === 'string' && value.trim().toLowerCase() === 'none'
       ? undefined
@@ -157,6 +158,7 @@ function toPokemon(set) {
   );
 
   return new Pokemon(gen, set.species, {
+    level: battleLevel,
     item: normalizeTextField(set.item),
     ability: normalizeTextField(set.ability),
     nature: normalizeTextField(set.nature),
@@ -166,9 +168,9 @@ function toPokemon(set) {
   });
 }
 
-function validateSet(set) {
+function validateSet(set, battleLevel = DEFAULT_BATTLE_LEVEL) {
   try {
-    return { pokemon: toPokemon(set) };
+    return { pokemon: toPokemon(set, battleLevel) };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { error: message };
@@ -247,13 +249,16 @@ function compareResultsByRulebook(a, b) {
   return a.attacker.localeCompare(b.attacker);
 }
 
-function calculateMatchups(sets) {
+function calculateMatchups(sets, options = {}) {
+  const battleLevel = Number.isFinite(Number(options.battleLevel))
+    ? Number(options.battleLevel)
+    : DEFAULT_BATTLE_LEVEL;
   const results = [];
   const skipped = [];
   const pokemonCache = new Map();
 
   for (const set of sets) {
-    const validated = validateSet(set);
+    const validated = validateSet(set, battleLevel);
     if (validated.error) {
       skipped.push({ name: set.name, species: set.species, reason: validated.error });
       continue;
@@ -344,7 +349,7 @@ function calculateMatchups(sets) {
     }
   }
 
-  return { results, skipped };
+  return { results, skipped, battleLevel };
 }
 
 function toText(results) {
@@ -377,11 +382,12 @@ function main() {
   const outTxtPath = path.resolve('matchups', `${baseName}_matchups.txt`);
 
   const sets = parseLibrarySets(inputPath);
-  const { results, skipped } = calculateMatchups(sets);
+  const { results, skipped, battleLevel } = calculateMatchups(sets);
 
   fs.mkdirSync(path.dirname(outJsonPath), { recursive: true });
   fs.writeFileSync(outJsonPath, JSON.stringify({
     source: inputArg,
+    battleLevel,
     count: results.length,
     skippedCount: skipped.length,
     skipped,
@@ -406,4 +412,5 @@ module.exports = {
   parseLibrarySets,
   calculateMatchups,
   compareResultsByRulebook,
+  DEFAULT_BATTLE_LEVEL,
 };

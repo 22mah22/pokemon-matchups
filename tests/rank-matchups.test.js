@@ -182,6 +182,6 @@ test('sortJustificationDecisionsByOpponentRanking orders wins first and losses b
 
   assert.deepEqual(
     aPayload.decisions.map((decision) => `${decision.result}:${decision.opponent.name}`),
-    ['win:D', 'win:E', 'lose:B', 'lose:C'],
+    ['win:B', 'win:C', 'lose:D', 'lose:E'],
   );
 });

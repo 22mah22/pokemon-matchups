@@ -72,6 +72,18 @@ test('rulebook can exclude and adjust scoring', () => withTempDir((dir) => {
   assert.equal(ruled[0].ruleTrace.length, 1);
 }));
 
+test('rulebook defaults battle level to 50 when omitted', () => withTempDir((dir) => {
+  const rulebookPath = path.join(dir, 'rulebook.json');
+  fs.writeFileSync(rulebookPath, JSON.stringify({
+    id: 'rules-1',
+    name: 'Rules 1',
+    rules: [],
+  }));
+
+  const loaded = loadRulebook(rulebookPath);
+  assert.equal(loaded.battleLevel, 50);
+}));
+
 test('sorting is driven by calculationOffset descending', () => {
   const sorted = sortMatchups([
     { opponent: 'Delta', result: 1, scoreContribution: 5, calculationOffset: 2, tags: ['OHKO'] },

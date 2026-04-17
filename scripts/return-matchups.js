@@ -204,8 +204,11 @@ function loadRulebook(rulebookPath) {
   const id = normalizeName(parsed.id || parsed.name || path.basename(rulebookPath, path.extname(rulebookPath)));
   const name = normalizeName(parsed.name || id);
   const rules = Array.isArray(parsed.rules) ? parsed.rules : [];
+  const battleLevel = Number.isFinite(Number(parsed.battleLevel))
+    ? Number(parsed.battleLevel)
+    : 50;
 
-  return { id, name, rules };
+  return { id, name, rules, battleLevel };
 }
 
 function entryMatchesRule(entry, rule) {
@@ -553,6 +556,7 @@ function buildOutput({ pokemon, rulebook, sortedMatchups, sourcePath, includeLeg
     applied_rulebook: {
       id: rulebook.id,
       name: rulebook.name,
+      battleLevel: rulebook.battleLevel,
     },
     source_matchups: sourcePath,
     generated_at: new Date().toISOString(),

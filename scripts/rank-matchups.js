@@ -87,12 +87,16 @@ function loadRulebook(rulebookPath) {
   const outcomeRules = Array.isArray(parsed.outcomeRules) && parsed.outcomeRules.length > 0
     ? parsed.outcomeRules
     : defaultOutcomeRules;
+  const battleLevel = Number.isFinite(Number(parsed.battleLevel))
+    ? Number(parsed.battleLevel)
+    : 50;
 
   return {
     id,
     description,
     scoring: normalizedScoring,
     outcomeRules,
+    battleLevel,
   };
 }
 
@@ -258,12 +262,15 @@ function toNormalizedRecords(results, rulebook) {
   return normalized;
 }
 
-function loadResultsFromInput(inputPath) {
+function loadResultsFromInput(inputPath, rulebook = {}) {
   const ext = path.extname(inputPath).toLowerCase();
+  const battleLevel = Number.isFinite(Number(rulebook.battleLevel))
+    ? Number(rulebook.battleLevel)
+    : 50;
 
   if (ext === '.txt') {
     const sets = parseLibrarySets(inputPath);
-    return calculateMatchups(sets).results;
+    return calculateMatchups(sets, { battleLevel }).results;
   }
 
   if (ext !== '.json') {
@@ -279,7 +286,7 @@ function loadResultsFromInput(inputPath) {
 
   if (parsed && Array.isArray(parsed.sets)) {
     const sets = parseLibrarySets(inputPath);
-    return calculateMatchups(sets).results;
+    return calculateMatchups(sets, { battleLevel }).results;
   }
 
   throw new Error('JSON input must include either a "results" array (matchups) or a "sets" array (library).');
@@ -352,6 +359,7 @@ function buildOutputPayload(inputArg, rulebook, normalized, ranking) {
     rulebook: {
       id: rulebook.id,
       description: rulebook.description,
+      battleLevel: rulebook.battleLevel,
       scoring: rulebook.scoring,
     },
     generatedAt: new Date().toISOString(),
@@ -526,7 +534,7 @@ function main() {
   );
 
   const rulebook = loadRulebook(rulebookPath);
-  const results = loadResultsFromInput(inputPath);
+  const results = loadResultsFromInput(inputPath, rulebook);
   const normalized = toNormalizedRecords(results, rulebook);
 
   if (normalized.length === 0) {
