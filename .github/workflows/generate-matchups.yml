@@ -53,10 +53,43 @@ jobs:
         env:
           BASE_NAME: ${{ env.BASE_NAME }}
         run: |
+          JSON_FILE="matchups/${BASE_NAME}_matchups.json"
+          TXT_FILE="matchups/${BASE_NAME}_matchups.txt"
+          COMPRESSED_FILE="${JSON_FILE}.gz"
+          SPLIT_PREFIX="${COMPRESSED_FILE}.part"
+          SPLIT_GLOB="${SPLIT_PREFIX}"*
+          MAX_GITHUB_BLOB_SIZE=100000000
+          MAX_SPLIT_CHUNK_SIZE=95000000
+          JSON_FILE_SIZE="$(wc -c < "$JSON_FILE")"
+
+          if [ "$JSON_FILE_SIZE" -gt "$MAX_GITHUB_BLOB_SIZE" ]; then
+            echo "::warning::$JSON_FILE is ${JSON_FILE_SIZE} bytes, exceeding GitHub's 100 MB blob limit."
+            echo "::warning::Creating compressed and split outputs for commit/push."
+
+            rm -f "$COMPRESSED_FILE"
+            rm -f $SPLIT_GLOB
+            gzip -9 -c "$JSON_FILE" > "$COMPRESSED_FILE"
+            split -b "$MAX_SPLIT_CHUNK_SIZE" -d -a 3 "$COMPRESSED_FILE" "$SPLIT_PREFIX"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            git add "$TXT_FILE" "$COMPRESSED_FILE" $SPLIT_GLOB
+
+            if git diff --cached --quiet; then
+              echo "No changes to commit."
+              exit 0
+            fi
+
+            git commit -m "Update ${BASE_NAME} matchups (compressed split output)"
+            git push origin "${{ github.ref_name }}"
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add "matchups/${BASE_NAME}_matchups.txt" "matchups/${BASE_NAME}_matchups.json"
+          git add "$TXT_FILE" "$JSON_FILE"
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
@@ -77,3 +110,12 @@ jobs:
         with:
           name: ${{ env.BASE_NAME }}_matchups_txt
           path: matchups/${{ env.BASE_NAME }}_matchups.txt
+
+      - name: Upload compressed/split output artifacts (if present)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BASE_NAME }}_matchups_compressed
+          path: |
+            matchups/${{ env.BASE_NAME }}_matchups.json.gz
+            matchups/${{ env.BASE_NAME }}_matchups.json.gz.part*
+          if-no-files-found: ignore
