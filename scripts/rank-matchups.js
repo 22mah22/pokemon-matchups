@@ -434,6 +434,38 @@ function buildPokemonJustificationPayloads(inputArg, rulebook, normalized) {
   return [...byPokemon.values()];
 }
 
+function sortJustificationDecisionsByOpponentRanking(justificationPayloads, ranking) {
+  const rankByPokemonName = new Map(
+    ranking.map((row, index) => [normalizeName(row?.pokemon).toLowerCase(), index + 1]),
+  );
+  const resultPriority = new Map([
+    ['win', 0],
+    ['lose', 1],
+    ['tie', 2],
+  ]);
+
+  return justificationPayloads.map((payload) => {
+    const decisions = Array.isArray(payload?.decisions) ? [...payload.decisions] : [];
+
+    decisions.sort((a, b) => {
+      const resultRankA = resultPriority.get(a?.result) ?? 99;
+      const resultRankB = resultPriority.get(b?.result) ?? 99;
+      if (resultRankA !== resultRankB) return resultRankA - resultRankB;
+
+      const opponentRankA = rankByPokemonName.get(normalizeName(a?.opponent?.name).toLowerCase()) ?? Number.POSITIVE_INFINITY;
+      const opponentRankB = rankByPokemonName.get(normalizeName(b?.opponent?.name).toLowerCase()) ?? Number.POSITIVE_INFINITY;
+      if (opponentRankA !== opponentRankB) return opponentRankA - opponentRankB;
+
+      return normalizeName(a?.opponent?.name).localeCompare(normalizeName(b?.opponent?.name));
+    });
+
+    return {
+      ...payload,
+      decisions,
+    };
+  });
+}
+
 function sanitizePokemonFileName(nameOrId) {
   const sanitized = String(nameOrId || '')
     .toLowerCase()
@@ -504,7 +536,10 @@ function main() {
   fs.writeFileSync(outputPath, JSON.stringify(payload, null, 2));
   console.log(`Wrote ranking file: ${outputArg}`);
 
-  const justificationPayloads = buildPokemonJustificationPayloads(inputArg, rulebook, normalized);
+  const justificationPayloads = sortJustificationDecisionsByOpponentRanking(
+    buildPokemonJustificationPayloads(inputArg, rulebook, normalized),
+    ranking,
+  );
   writePokemonJustificationFiles(justificationsDir, justificationPayloads);
   console.log(`Wrote ${justificationPayloads.length} justification files: ${justificationsDir}`);
 }
@@ -521,6 +556,7 @@ module.exports = {
   aggregateRanking,
   buildOutputPayload,
   buildPokemonJustificationPayloads,
+  sortJustificationDecisionsByOpponentRanking,
   sanitizePokemonFileName,
   defaultJustificationsDirForOutput,
   writePokemonJustificationFiles,
