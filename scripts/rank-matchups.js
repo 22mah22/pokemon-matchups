@@ -78,7 +78,8 @@ function loadRulebook(rulebookPath) {
   }
 
   const defaultOutcomeRules = [
-    { id: 'ohko', metric: 'canOhko', speedTiebreak: true },
+    { id: 'ohko-guaranteed', metric: 'canGuaranteedOhko', speedTiebreak: true },
+    { id: 'ohko-potential', metric: 'canPossibleOhko', speedTiebreak: true },
     { id: 'hko2-guaranteed', metric: 'canGuaranteed2hko', speedTiebreak: true },
     { id: 'hko2-potential', metric: 'canPossible2hko', speedTiebreak: true },
   ];
@@ -115,6 +116,8 @@ function toDirectionalEntries(results, rulebook) {
           bestKillTier: entry.bestKillTier || KILL_TIERS.WORSE,
           bestKillTierRank: KILL_TIER_ORDER.get(entry.bestKillTier || KILL_TIERS.WORSE),
           speedAdvantage,
+          canGuaranteedOhko: entry.moves?.some((move) => move?.ohkoGuaranteed === true) || false,
+          canPossibleOhko: entry.moves?.some((move) => move?.ohkoPossible === true) || false,
           canOhko: entry.moves?.some((move) => move?.ohkoPossible === true) || false,
           canGuaranteed2hko: entry.moves?.some((move) => move?.hko2Guaranteed === true) || false,
           canPossible2hko: entry.moves?.some((move) => move?.hko2Possible === true) || false,
@@ -411,6 +414,8 @@ function buildPokemonJustificationPayloads(inputArg, rulebook, normalized) {
       metadata: {
         bestKillTier: record.metadata?.bestKillTier,
         canOhko: Boolean(record.metadata?.canOhko),
+        canGuaranteedOhko: Boolean(record.metadata?.canGuaranteedOhko),
+        canPossibleOhko: Boolean(record.metadata?.canPossibleOhko),
         canGuaranteed2hko: Boolean(record.metadata?.canGuaranteed2hko),
         canPossible2hko: Boolean(record.metadata?.canPossible2hko),
         speedAdvantage: Number(record.metadata?.speedAdvantage) || 0,
