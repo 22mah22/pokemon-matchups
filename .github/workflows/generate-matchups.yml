@@ -31,11 +31,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install @smogon/calc subpkg dependencies
-        run: |
-          cd node_modules/@smogon/calc
-          npx --yes subpkg install
-
       - name: Verify @smogon/calc dependency resolution
         run: |
           node -e "console.log(require.resolve('@smogon/calc'))"

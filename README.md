@@ -14,7 +14,7 @@ This reads Showdown import sets from `libraries/*.txt` (with optional enrichment
 
 ### Install policy note
 
-The repo default is `ignore-scripts=true` in `.npmrc` to block lifecycle scripts during routine installs. Matchup generation is a scoped exception: `@smogon/calc` is installed from `smogon/damage-calc` and requires its `postinstall` lifecycle script to wire the `calc` subpackage, so the generation workflow explicitly uses `npm ci --ignore-scripts=false`.
+The repo default is `ignore-scripts=true` in `.npmrc` to block lifecycle scripts during routine installs. `@smogon/calc` is consumed via the published alias `npm:@22mah22/calc@0.11.0-champions.0`, so workflows can run standard `npm ci` without manual subpackage bootstrap steps.
 
 ## File layout
 
