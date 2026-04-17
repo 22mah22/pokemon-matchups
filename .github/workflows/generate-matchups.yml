@@ -29,12 +29,12 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts=false
 
       - name: Verify @smogon/calc dependency resolution
         run: |
           npm ls @smogon/calc
-          node -e "require.resolve('@smogon/calc'); console.log('resolved')"
+          node -e "console.log(require.resolve('@smogon/calc'))"
 
       - name: Generate matchup files
         env:
