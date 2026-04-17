@@ -15,6 +15,10 @@ on:
         description: "Path to write ranking output JSON"
         required: true
         default: "matchups/champions_ou_ranked.json"
+      justifications_dir:
+        description: "Optional override directory for per-Pokemon justification JSON files"
+        required: false
+        default: ""
       commit_and_push:
         description: "Commit and push ranking output back to the branch"
         required: false
@@ -74,29 +78,67 @@ jobs:
           INPUT_FILE: ${{ github.event.inputs.input_file }}
           RULEBOOK_FILE: ${{ github.event.inputs.rulebook_file }}
           OUTPUT_FILE: ${{ github.event.inputs.output_file }}
+          JUSTIFICATIONS_DIR: ${{ github.event.inputs.justifications_dir }}
         run: |
-          node scripts/rank-matchups.js --input "$INPUT_FILE" --rulebook "$RULEBOOK_FILE" --output "$OUTPUT_FILE"
+          if [ -n "$JUSTIFICATIONS_DIR" ]; then
+            node scripts/rank-matchups.js --input "$INPUT_FILE" --rulebook "$RULEBOOK_FILE" --output "$OUTPUT_FILE" --justifications-dir "$JUSTIFICATIONS_DIR"
+          else
+            node scripts/rank-matchups.js --input "$INPUT_FILE" --rulebook "$RULEBOOK_FILE" --output "$OUTPUT_FILE"
+          fi
 
       - name: Commit and push ranking output (optional)
         if: ${{ github.event.inputs.commit_and_push == 'true' }}
         env:
           OUTPUT_FILE: ${{ github.event.inputs.output_file }}
+          JUSTIFICATIONS_DIR: ${{ github.event.inputs.justifications_dir }}
         run: |
+          output_dir="$(dirname "$OUTPUT_FILE")"
+          output_base="$(basename "$OUTPUT_FILE")"
+          output_stem="${output_base%.*}"
+          sanitized_stem="$(printf '%s' "$output_stem" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/^_+//; s/_+$//')"
+          if [ -z "$sanitized_stem" ]; then
+            sanitized_stem="ranking"
+          fi
+          default_justifications_dir="${output_dir}/${sanitized_stem}_justifications"
+          resolved_justifications_dir="${JUSTIFICATIONS_DIR:-$default_justifications_dir}"
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add "$OUTPUT_FILE"
+          git add "$resolved_justifications_dir"
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
 
-          git commit -m "Update ranked matchups output"
+          git commit -m "Update ranked matchups output and justifications"
           git push origin "${{ github.ref_name }}"
+
+      - name: Resolve ranking artifact paths
+        env:
+          OUTPUT_FILE: ${{ github.event.inputs.output_file }}
+          JUSTIFICATIONS_DIR: ${{ github.event.inputs.justifications_dir }}
+        run: |
+          output_dir="$(dirname "$OUTPUT_FILE")"
+          output_base="$(basename "$OUTPUT_FILE")"
+          output_stem="${output_base%.*}"
+          sanitized_stem="$(printf '%s' "$output_stem" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/^_+//; s/_+$//')"
+          if [ -z "$sanitized_stem" ]; then
+            sanitized_stem="ranking"
+          fi
+          default_justifications_dir="${output_dir}/${sanitized_stem}_justifications"
+          resolved_justifications_dir="${JUSTIFICATIONS_DIR:-$default_justifications_dir}"
+          {
+            echo "OUTPUT_FILE=$OUTPUT_FILE"
+            echo "RESOLVED_JUSTIFICATIONS_DIR=$resolved_justifications_dir"
+          } >> "$GITHUB_ENV"
 
       - name: Upload ranking output artifact
         uses: actions/upload-artifact@v4
         with:
           name: ranked_matchups_output
-          path: ${{ github.event.inputs.output_file }}
+          path: |
+            ${{ env.OUTPUT_FILE }}
+            ${{ env.RESOLVED_JUSTIFICATIONS_DIR }}
