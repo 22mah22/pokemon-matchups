@@ -29,12 +29,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Initialize @smogon/calc subpackage
-        run: |
-          cd node_modules/@smogon/calc
-          npx --yes subpkg install
+        run: npm ci --ignore-scripts=false
 
       - name: Verify @smogon/calc dependency resolution
         run: |
