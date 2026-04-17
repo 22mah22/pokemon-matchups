@@ -19,6 +19,7 @@ function parseArgs(argv) {
   let inputPath;
   let rulebookPath;
   let outputPath;
+  let justificationsDir;
 
   for (let i = 2; i < argv.length; i += 1) {
     const token = argv[i];
@@ -31,10 +32,13 @@ function parseArgs(argv) {
     } else if (token === '--output') {
       outputPath = argv[i + 1];
       i += 1;
+    } else if (token === '--justifications-dir') {
+      justificationsDir = argv[i + 1];
+      i += 1;
     }
   }
 
-  return { inputPath, rulebookPath, outputPath };
+  return { inputPath, rulebookPath, outputPath, justificationsDir };
 }
 
 function normalizeName(value) {
@@ -113,7 +117,24 @@ function toDirectionalEntries(results, rulebook) {
 }
 
 function evaluatePair(first, second, rulebook) {
-  if (!first || !second) return ['tie', 'tie'];
+  return evaluatePairWithTrace(first, second, rulebook).results;
+}
+
+function evaluatePairWithTrace(first, second, rulebook) {
+  const trace = [];
+
+  if (!first || !second) {
+    return {
+      results: ['tie', 'tie'],
+      trace: [
+        {
+          ruleId: 'missing-reverse-record',
+          resolved: true,
+          resolution: 'tie',
+        },
+      ],
+    };
+  }
 
   for (const step of rulebook.outcomeRules) {
     const metric = normalizeName(step?.metric);
@@ -122,18 +143,64 @@ function evaluatePair(first, second, rulebook) {
     const firstCan = Boolean(first.metadata?.[metric]);
     const secondCan = Boolean(second.metadata?.[metric]);
 
-    if (firstCan && !secondCan) return ['win', 'lose'];
-    if (!firstCan && secondCan) return ['lose', 'win'];
+    const traceStep = {
+      ruleId: normalizeName(step?.id || metric),
+      metric,
+      firstCan,
+      secondCan,
+      speedTiebreak: Boolean(step?.speedTiebreak),
+      resolved: false,
+      resolution: null,
+    };
+
+    if (firstCan && !secondCan) {
+      traceStep.resolved = true;
+      traceStep.resolution = 'first-win-second-lose';
+      trace.push(traceStep);
+      return { results: ['win', 'lose'], trace };
+    }
+    if (!firstCan && secondCan) {
+      traceStep.resolved = true;
+      traceStep.resolution = 'first-lose-second-win';
+      trace.push(traceStep);
+      return { results: ['lose', 'win'], trace };
+    }
 
     if (firstCan && secondCan && Boolean(step?.speedTiebreak)) {
       const firstSpeedAdvantage = Number(first.metadata?.speedAdvantage) || 0;
       const secondSpeedAdvantage = Number(second.metadata?.speedAdvantage) || 0;
-      if (firstSpeedAdvantage > secondSpeedAdvantage) return ['win', 'lose'];
-      if (firstSpeedAdvantage < secondSpeedAdvantage) return ['lose', 'win'];
+      traceStep.firstSpeedAdvantage = firstSpeedAdvantage;
+      traceStep.secondSpeedAdvantage = secondSpeedAdvantage;
+
+      if (firstSpeedAdvantage > secondSpeedAdvantage) {
+        traceStep.resolved = true;
+        traceStep.resolution = 'first-win-second-lose-speed';
+        trace.push(traceStep);
+        return { results: ['win', 'lose'], trace };
+      }
+      if (firstSpeedAdvantage < secondSpeedAdvantage) {
+        traceStep.resolved = true;
+        traceStep.resolution = 'first-lose-second-win-speed';
+        trace.push(traceStep);
+        return { results: ['lose', 'win'], trace };
+      }
     }
+
+    traceStep.resolution = 'fallthrough';
+    trace.push(traceStep);
   }
 
-  return ['tie', 'tie'];
+  return {
+    results: ['tie', 'tie'],
+    trace: [
+      ...trace,
+      {
+        ruleId: 'default-tie',
+        resolved: true,
+        resolution: 'tie',
+      },
+    ],
+  };
 }
 
 function toNormalizedRecords(results, rulebook) {
@@ -156,11 +223,24 @@ function toNormalizedRecords(results, rulebook) {
     const reverseKey = `${record.opponent.id}->${record.pokemon.id}`;
     const reverse = byKey.get(reverseKey);
 
-    const [forwardResult, reverseResult] = evaluatePair(record, reverse, rulebook);
-    normalized.push({ ...record, result: forwardResult });
+    const evaluation = evaluatePairWithTrace(record, reverse, rulebook);
+    const [forwardResult, reverseResult] = evaluation.results;
+    const reverseTrace = evaluation.trace.map((step) => ({
+      ...step,
+      firstCan: typeof step.firstCan === 'boolean' ? step.secondCan : step.firstCan,
+      secondCan: typeof step.secondCan === 'boolean' ? step.firstCan : step.secondCan,
+      firstSpeedAdvantage: Number.isFinite(step.secondSpeedAdvantage)
+        ? step.secondSpeedAdvantage
+        : step.firstSpeedAdvantage,
+      secondSpeedAdvantage: Number.isFinite(step.firstSpeedAdvantage)
+        ? step.firstSpeedAdvantage
+        : step.secondSpeedAdvantage,
+    }));
+
+    normalized.push({ ...record, result: forwardResult, decisionTrace: evaluation.trace });
 
     if (reverse) {
-      normalized.push({ ...reverse, result: reverseResult });
+      normalized.push({ ...reverse, result: reverseResult, decisionTrace: reverseTrace });
     }
   }
 
@@ -271,10 +351,90 @@ function buildOutputPayload(inputArg, rulebook, normalized, ranking) {
   };
 }
 
+function buildPokemonJustificationPayloads(inputArg, rulebook, normalized) {
+  const byPokemon = new Map();
+
+  for (const record of normalized) {
+    const key = record.pokemon.id;
+    if (!byPokemon.has(key)) {
+      byPokemon.set(key, {
+        pokemon: {
+          id: record.pokemon.id,
+          name: record.pokemon.name,
+        },
+        generatedAt: new Date().toISOString(),
+        source: {
+          input: inputArg,
+          rulebook: {
+            id: rulebook.id,
+          },
+        },
+        summary: {
+          wins: 0,
+          losses: 0,
+          ties: 0,
+          score: 0,
+        },
+        decisions: [],
+      });
+    }
+
+    const payload = byPokemon.get(key);
+    if (record.result === 'win') payload.summary.wins += 1;
+    else if (record.result === 'lose') payload.summary.losses += 1;
+    else payload.summary.ties += 1;
+
+    const scoringResult = record.result === 'lose' ? 'loss' : record.result;
+    payload.summary.score += rulebook.scoring[scoringResult] ?? 0;
+
+    payload.decisions.push({
+      opponent: {
+        id: record.opponent.id,
+        name: record.opponent.name,
+      },
+      result: record.result,
+      metadata: {
+        bestKillTier: record.metadata?.bestKillTier,
+        canOhko: Boolean(record.metadata?.canOhko),
+        canGuaranteed2hko: Boolean(record.metadata?.canGuaranteed2hko),
+        canPossible2hko: Boolean(record.metadata?.canPossible2hko),
+        speedAdvantage: Number(record.metadata?.speedAdvantage) || 0,
+      },
+      explanationTrace: Array.isArray(record.decisionTrace)
+        ? record.decisionTrace.map((step) => ({
+          ruleId: step.ruleId,
+          metric: step.metric,
+          firstCan: step.firstCan,
+          secondCan: step.secondCan,
+          speedTiebreak: step.speedTiebreak,
+          firstSpeedAdvantage: step.firstSpeedAdvantage,
+          secondSpeedAdvantage: step.secondSpeedAdvantage,
+          resolved: Boolean(step.resolved),
+          resolution: step.resolution,
+        }))
+        : [],
+    });
+  }
+
+  return [...byPokemon.values()];
+}
+
+function toSafeFilename(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'pokemon';
+}
+
 function main() {
-  const { inputPath: inputArg, rulebookPath: rulebookArg, outputPath: outputArg } = parseArgs(process.argv);
+  const {
+    inputPath: inputArg,
+    rulebookPath: rulebookArg,
+    outputPath: outputArg,
+    justificationsDir: justificationsDirArg,
+  } = parseArgs(process.argv);
   if (!inputArg || !rulebookArg || !outputArg) {
-    console.error('Usage: node scripts/rank-matchups.js --input <path> --rulebook <path> --output <path>');
+    console.error('Usage: node scripts/rank-matchups.js --input <path> --rulebook <path> --output <path> [--justifications-dir <path>]');
     process.exit(1);
   }
 
@@ -297,6 +457,20 @@ function main() {
   ensureParentDirectory(outputPath);
   fs.writeFileSync(outputPath, JSON.stringify(payload, null, 2));
   console.log(`Wrote ranking file: ${outputArg}`);
+
+  if (justificationsDirArg) {
+    const justificationsDir = path.resolve(justificationsDirArg);
+    fs.mkdirSync(justificationsDir, { recursive: true });
+    const justificationPayloads = buildPokemonJustificationPayloads(inputArg, rulebook, normalized);
+
+    for (const item of justificationPayloads) {
+      const filename = `${toSafeFilename(item.pokemon.id)}.json`;
+      const filePath = path.join(justificationsDir, filename);
+      fs.writeFileSync(filePath, JSON.stringify(item, null, 2));
+    }
+
+    console.log(`Wrote ${justificationPayloads.length} justification files: ${justificationsDirArg}`);
+  }
 }
 
 if (require.main === module) {
@@ -310,4 +484,6 @@ module.exports = {
   toNormalizedRecords,
   aggregateRanking,
   buildOutputPayload,
+  buildPokemonJustificationPayloads,
+  toSafeFilename,
 };
