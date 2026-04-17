@@ -29,13 +29,15 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts=false
-        # @smogon/calc is sourced from smogon/damage-calc and needs postinstall
-        # to wire its calc subpackage, so this workflow opts in explicitly.
+        run: npm ci
+
+      - name: Initialize @smogon/calc subpackage
+        run: |
+          cd node_modules/@smogon/calc
+          npx --yes subpkg install
 
       - name: Verify @smogon/calc dependency resolution
         run: |
-          npm ls @smogon/calc
           node -e "console.log(require.resolve('@smogon/calc'))"
 
       - name: Generate matchup files
