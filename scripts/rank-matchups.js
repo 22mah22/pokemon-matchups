@@ -337,6 +337,13 @@ function ensureParentDirectory(filePath) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
+function defaultJustificationsDirForOutput(outputPath) {
+  const outputDir = path.dirname(outputPath);
+  const outputBaseName = path.basename(outputPath, path.extname(outputPath));
+  const folderBase = sanitizePokemonFileName(outputBaseName) || 'ranking';
+  return path.join(outputDir, `${folderBase}_justifications`);
+}
+
 function buildOutputPayload(inputArg, rulebook, normalized, ranking) {
   return {
     rulebook: {
@@ -460,7 +467,7 @@ function main() {
   if (!inputArg || !rulebookArg || !outputArg) {
     console.error([
       'Usage: node scripts/rank-matchups.js --input <path> --rulebook <path> --output <path>',
-      'Optional: --justifications-dir <path> to write <path>/<pokemon-id>.json justification files.',
+      'Optional: --justifications-dir <path> to override default output-adjacent justification directory.',
     ].join('\n'));
     process.exit(1);
   }
@@ -469,7 +476,7 @@ function main() {
     console.error([
       'Invalid --justifications-dir value.',
       'Usage: node scripts/rank-matchups.js --input <path> --rulebook <path> --output <path>',
-      'Optional: --justifications-dir <path> to write <path>/<pokemon-id>.json justification files.',
+      'Optional: --justifications-dir <path> to override default output-adjacent justification directory.',
     ].join('\n'));
     process.exit(1);
   }
@@ -477,6 +484,9 @@ function main() {
   const inputPath = path.resolve(inputArg);
   const rulebookPath = path.resolve(rulebookArg);
   const outputPath = path.resolve(outputArg);
+  const justificationsDir = path.resolve(
+    justificationsDirArg || defaultJustificationsDirForOutput(outputPath),
+  );
 
   const rulebook = loadRulebook(rulebookPath);
   const results = loadResultsFromInput(inputPath);
@@ -494,11 +504,9 @@ function main() {
   fs.writeFileSync(outputPath, JSON.stringify(payload, null, 2));
   console.log(`Wrote ranking file: ${outputArg}`);
 
-  if (justificationsDirProvided) {
-    const justificationPayloads = buildPokemonJustificationPayloads(inputArg, rulebook, normalized);
-    const justificationsDir = writePokemonJustificationFiles(justificationsDirArg, justificationPayloads);
-    console.log(`Wrote ${justificationPayloads.length} justification files: ${justificationsDirArg}`);
-  }
+  const justificationPayloads = buildPokemonJustificationPayloads(inputArg, rulebook, normalized);
+  writePokemonJustificationFiles(justificationsDir, justificationPayloads);
+  console.log(`Wrote ${justificationPayloads.length} justification files: ${justificationsDir}`);
 }
 
 if (require.main === module) {
@@ -514,5 +522,6 @@ module.exports = {
   buildOutputPayload,
   buildPokemonJustificationPayloads,
   sanitizePokemonFileName,
+  defaultJustificationsDirForOutput,
   writePokemonJustificationFiles,
 };
