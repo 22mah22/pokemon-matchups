@@ -6,11 +6,15 @@ const path = require('node:path');
 
 const {
   aggregateRanking,
+  aggregateWeightedRanking,
   buildPokemonJustificationPayloads,
+  buildWeightedOutputPayload,
+  computeWeightedWinPoints,
   loadResultsFromInput,
   toNormalizedRecords,
   sanitizePokemonFileName,
   sortJustificationDecisionsByOpponentRanking,
+  weightedOutputPathForInput,
   writePokemonJustificationFiles,
 } = require('../scripts/rank-matchups');
 
@@ -250,4 +254,47 @@ test('toNormalizedRecords preserves multiple sets that share a species name via 
   const ranking = aggregateRanking(normalized, { scoring: { win: 1, tie: 0, loss: -1 } });
   const blastoiseRows = ranking.filter((row) => row.pokemon.startsWith('Blastoise-Mega'));
   assert.equal(blastoiseRows.length, 2);
+});
+
+test('computeWeightedWinPoints gives 3 for top rank and 1 for last rank', () => {
+  assert.equal(computeWeightedWinPoints(1, 10), 3);
+  assert.equal(computeWeightedWinPoints(10, 10), 1);
+  assert.equal(computeWeightedWinPoints(5, 10), 1 + (2 * ((10 - 5) / 9)));
+});
+
+test('aggregateWeightedRanking uses unweighted ranking order for win weighting', () => {
+  const normalized = [
+    { pokemon: { id: 'x', name: 'X' }, opponent: { id: 'a', name: 'A' }, result: 'win' },
+    { pokemon: { id: 'x', name: 'X' }, opponent: { id: 'c', name: 'C' }, result: 'win' },
+    { pokemon: { id: 'a', name: 'A' }, opponent: { id: 'x', name: 'X' }, result: 'lose' },
+    { pokemon: { id: 'c', name: 'C' }, opponent: { id: 'x', name: 'X' }, result: 'lose' },
+  ];
+  const ranking = [
+    { pokemon: 'A', score: 10 },
+    { pokemon: 'B', score: 8 },
+    { pokemon: 'C', score: 4 },
+  ];
+  const weighted = aggregateWeightedRanking(normalized, ranking);
+
+  const rowX = weighted.find((row) => row.pokemon === 'X');
+  assert.equal(rowX.weightedScore, 4);
+});
+
+test('weighted output filename is based on input matchups filename', () => {
+  const weightedPath = weightedOutputPathForInput('/tmp/matchups/champions_ou_matchups.json');
+  assert.equal(weightedPath, '/tmp/matchups/champions_ou_matchups_weighted.json');
+});
+
+test('buildWeightedOutputPayload emits weighted ranking fields', () => {
+  const payload = buildWeightedOutputPayload(
+    'matchups/champions_ou_matchups.json',
+    { id: 'rules', description: 'desc', battleLevel: 50, scoring: { win: 1, tie: 0, loss: 0 } },
+    [{}, {}],
+    [{ pokemon: 'A', score: 10 }, { pokemon: 'B', score: 8 }],
+    [{ pokemon: 'A', weightedScore: 3 }, { pokemon: 'B', weightedScore: 1 }],
+  );
+
+  assert.equal(payload.totals.normalizedCount, 2);
+  assert.equal(payload.ranking[0].weightedScore, 3);
+  assert.equal(payload.weightedFromRanking[0].rank, 1);
 });

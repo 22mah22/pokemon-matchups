@@ -338,6 +338,70 @@ function aggregateRanking(normalized, rulebook) {
   return ranked;
 }
 
+function computeWeightedWinPoints(opponentRank, pokemonCount) {
+  if (!Number.isFinite(opponentRank) || opponentRank <= 0) return 1;
+  if (!Number.isFinite(pokemonCount) || pokemonCount <= 1) return 1;
+  return 1 + (2 * ((pokemonCount - opponentRank) / (pokemonCount - 1)));
+}
+
+function aggregateWeightedRanking(normalized, ranking) {
+  const rankByPokemonName = new Map(
+    ranking.map((row, index) => [normalizeName(row?.pokemon).toLowerCase(), index + 1]),
+  );
+  const pokemonCount = ranking.length;
+  const table = new Map();
+
+  for (const record of normalized) {
+    const key = record.pokemon.id;
+    if (!table.has(key)) {
+      table.set(key, {
+        pokemon: record.pokemon.name,
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        weightedScore: 0,
+        total: 0,
+        winRate: 0,
+      });
+    }
+
+    const row = table.get(key);
+    if (record.result === 'win') row.wins += 1;
+    else if (record.result === 'lose') row.losses += 1;
+    else row.ties += 1;
+
+    if (record.result === 'win') {
+      const opponentRank = rankByPokemonName.get(normalizeName(record.opponent?.name).toLowerCase());
+      row.weightedScore += computeWeightedWinPoints(opponentRank, pokemonCount);
+    }
+
+    row.total += 1;
+  }
+
+  const ranked = [...table.values()].map((row) => {
+    const denominator = row.wins + row.losses;
+    const winRate = denominator > 0 ? row.wins / denominator : 0;
+    return {
+      pokemon: row.pokemon,
+      wins: row.wins,
+      losses: row.losses,
+      ties: row.ties,
+      weightedScore: row.weightedScore,
+      total: row.total,
+      winRate,
+    };
+  });
+
+  ranked.sort((a, b) => (
+    (b.weightedScore - a.weightedScore)
+      || (b.winRate - a.winRate)
+      || (b.wins - a.wins)
+      || a.pokemon.localeCompare(b.pokemon)
+  ));
+
+  return ranked;
+}
+
 function ensureParentDirectory(filePath) {
   const outputDir = path.dirname(filePath);
   fs.mkdirSync(outputDir, { recursive: true });
@@ -369,6 +433,40 @@ function buildOutputPayload(inputArg, rulebook, normalized, ranking) {
       rank: index + 1,
       pokemon: row.pokemon,
       score: row.score,
+    })),
+  };
+}
+
+function weightedOutputPathForInput(inputPath) {
+  const inputDir = path.dirname(inputPath);
+  const inputBaseName = path.basename(inputPath, path.extname(inputPath));
+  return path.join(inputDir, `${inputBaseName}_weighted.json`);
+}
+
+function buildWeightedOutputPayload(inputArg, rulebook, normalized, ranking, weightedRanking) {
+  return {
+    rulebook: {
+      id: rulebook.id,
+      description: rulebook.description,
+      battleLevel: rulebook.battleLevel,
+      scoring: rulebook.scoring,
+    },
+    generatedAt: new Date().toISOString(),
+    input: inputArg,
+    totals: {
+      normalizedCount: normalized.length,
+      pokemonCount: weightedRanking.length,
+    },
+    weightedFromRanking: ranking.map((row, index) => ({
+      rank: index + 1,
+      pokemon: row.pokemon,
+      score: row.score,
+    })),
+    stats: weightedRanking,
+    ranking: weightedRanking.map((row, index) => ({
+      rank: index + 1,
+      pokemon: row.pokemon,
+      weightedScore: row.weightedScore,
     })),
   };
 }
@@ -540,10 +638,23 @@ function main() {
 
   const ranking = aggregateRanking(normalized, rulebook);
   const payload = buildOutputPayload(inputArg, rulebook, normalized, ranking);
+  const weightedRanking = aggregateWeightedRanking(normalized, ranking);
+  const weightedPath = weightedOutputPathForInput(inputPath);
+  const weightedPayload = buildWeightedOutputPayload(
+    inputArg,
+    rulebook,
+    normalized,
+    ranking,
+    weightedRanking,
+  );
 
   ensureParentDirectory(outputPath);
   fs.writeFileSync(outputPath, JSON.stringify(payload, null, 2));
   console.log(`Wrote ranking file: ${outputArg}`);
+
+  ensureParentDirectory(weightedPath);
+  fs.writeFileSync(weightedPath, JSON.stringify(weightedPayload, null, 2));
+  console.log(`Wrote weighted ranking file: ${weightedPath}`);
 
   const justificationPayloads = sortJustificationDecisionsByOpponentRanking(
     buildPokemonJustificationPayloads(inputArg, rulebook, normalized),
@@ -563,7 +674,11 @@ module.exports = {
   loadResultsFromInput,
   toNormalizedRecords,
   aggregateRanking,
+  computeWeightedWinPoints,
+  aggregateWeightedRanking,
   buildOutputPayload,
+  weightedOutputPathForInput,
+  buildWeightedOutputPayload,
   buildPokemonJustificationPayloads,
   sortJustificationDecisionsByOpponentRanking,
   sanitizePokemonFileName,
