@@ -283,13 +283,7 @@ function loadResultsFromInput(inputPath, rulebook = {}) {
   if (parsed && Array.isArray(parsed.results)) {
     return parsed.results;
   }
-
-  if (parsed && Array.isArray(parsed.sets)) {
-    const sets = parseLibrarySets(inputPath);
-    return calculateMatchups(sets, { battleLevel }).results;
-  }
-
-  throw new Error('JSON input must include either a "results" array (matchups) or a "sets" array (library).');
+  throw new Error('JSON input must include a "results" array (matchups).');
 }
 
 function aggregateRanking(normalized, rulebook) {

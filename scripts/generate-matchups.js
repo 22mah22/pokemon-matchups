@@ -99,33 +99,6 @@ function hasDetailedSetData(set) {
   );
 }
 
-function parseSetsFromJsonLibrary(jsonPath, speciesFilter = null) {
-  const raw = fs.readFileSync(jsonPath, 'utf8');
-  const parsed = JSON.parse(raw);
-  if (!parsed || !Array.isArray(parsed.sets)) {
-    return [];
-  }
-
-  const wanted = speciesFilter ? new Set(speciesFilter) : null;
-  const out = [];
-
-  for (const entry of parsed.sets) {
-    if (!entry || typeof entry.set !== 'string') continue;
-    const parsedSets = parseShowdownSets(entry.set);
-    if (parsedSets.length === 0) continue;
-    const parsedSet = parsedSets[0];
-    const species = entry.pokemon || parsedSet.species;
-    if (wanted && !wanted.has(species)) continue;
-    out.push({
-      ...parsedSet,
-      name: species,
-      species,
-    });
-  }
-
-  return out;
-}
-
 function parseLibrarySets(inputPath) {
   const ext = path.extname(inputPath).toLowerCase();
   if (ext !== '.txt') {
@@ -396,7 +369,6 @@ if (require.main === module) {
 module.exports = {
   KILL_TIERS,
   parseShowdownSets,
-  parseSetsFromJsonLibrary,
   parseLibrarySets,
   calculateMatchups,
   compareResultsByRulebook,
