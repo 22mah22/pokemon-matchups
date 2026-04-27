@@ -128,26 +128,14 @@ function parseSetsFromJsonLibrary(jsonPath, speciesFilter = null) {
 
 function parseLibrarySets(inputPath) {
   const ext = path.extname(inputPath).toLowerCase();
+  if (ext !== '.txt') {
+    throw new Error(
+      `Unsupported input extension "${ext || '(none)'}". Only detailed Showdown set libraries in .txt format are supported.`
+    );
+  }
+
   const file = fs.readFileSync(inputPath, 'utf8');
-
-  if (ext === '.json') {
-    return parseSetsFromJsonLibrary(inputPath);
-  }
-
-  const parsed = parseShowdownSets(file);
-  const hasAnyDetailedData = parsed.some(hasDetailedSetData);
-  if (hasAnyDetailedData) {
-    return parsed;
-  }
-
-  const companionJson = path.join(path.dirname(inputPath), `${path.basename(inputPath, ext)}.json`);
-  if (!fs.existsSync(companionJson)) {
-    return parsed;
-  }
-
-  const species = parsed.map((set) => set.species);
-  const enriched = parseSetsFromJsonLibrary(companionJson, species);
-  return enriched.length > 0 ? enriched : parsed;
+  return parseShowdownSets(file);
 }
 
 function toPokemon(set, battleLevel = DEFAULT_BATTLE_LEVEL) {
