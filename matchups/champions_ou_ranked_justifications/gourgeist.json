@@ -3,7 +3,7 @@
     "id": "gourgeist",
     "name": "Gourgeist"
   },
-  "generatedAt": "2026-04-27T13:45:20.981Z",
+  "generatedAt": "2026-04-27T14:24:55.500Z",
   "source": {
     "input": "matchups/champions_ou_matchups.json",
     "rulebook": {
@@ -19,8 +19,8 @@
   "decisions": [
     {
       "opponent": {
-        "id": "gardevoir-mega",
-        "name": "Gardevoir-Mega"
+        "id": "starmie-mega",
+        "name": "Starmie-Mega"
       },
       "result": "win",
       "metadata": {
@@ -30,7 +30,7 @@
         "canPossibleOhko": true,
         "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": -31
+        "speedAdvantage": -53
       },
       "explanationTrace": [
         {
@@ -46,8 +46,8 @@
     },
     {
       "opponent": {
-        "id": "starmie-mega",
-        "name": "Starmie-Mega"
+        "id": "gardevoir-mega",
+        "name": "Gardevoir-Mega"
       },
       "result": "win",
       "metadata": {
@@ -57,7 +57,7 @@
         "canPossibleOhko": true,
         "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": -53
+        "speedAdvantage": -31
       },
       "explanationTrace": [
         {
@@ -520,6 +520,80 @@
     },
     {
       "opponent": {
+        "id": "mamoswine",
+        "name": "Mamoswine"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "OHKO_GUARANTEED",
+        "canOhko": true,
+        "canGuaranteedOhko": true,
+        "canPossibleOhko": true,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": 4
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": true,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "reuniclus",
+        "name": "Reuniclus"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "HKO2_GUARANTEED",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": 80
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-guaranteed",
+          "metric": "canGuaranteed2hko",
+          "firstCan": true,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "firstSpeedAdvantage": 80,
+          "secondSpeedAdvantage": -80,
+          "resolved": true,
+          "resolution": "first-lose-second-win-speed"
+        }
+      ]
+    },
+    {
+      "opponent": {
         "id": "tyranitar-mega",
         "name": "Tyranitar-Mega"
       },
@@ -607,80 +681,6 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "mamoswine",
-        "name": "Mamoswine"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "OHKO_GUARANTEED",
-        "canOhko": true,
-        "canGuaranteedOhko": true,
-        "canPossibleOhko": true,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": 4
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": true,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "reuniclus",
-        "name": "Reuniclus"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": 80
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-guaranteed",
-          "metric": "canGuaranteed2hko",
-          "firstCan": true,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "firstSpeedAdvantage": 80,
-          "secondSpeedAdvantage": -80,
-          "resolved": true,
-          "resolution": "first-lose-second-win-speed"
         }
       ]
     },
@@ -827,33 +827,6 @@
     },
     {
       "opponent": {
-        "id": "quaquaval",
-        "name": "Quaquaval"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "OHKO_GUARANTEED",
-        "canOhko": true,
-        "canGuaranteedOhko": true,
-        "canPossibleOhko": true,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -1
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": true,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "golurk",
         "name": "Golurk"
       },
@@ -876,6 +849,33 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "quaquaval",
+        "name": "Quaquaval"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "OHKO_GUARANTEED",
+        "canOhko": true,
+        "canGuaranteedOhko": true,
+        "canPossibleOhko": true,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": -1
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": true,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
         }
       ]
     },
@@ -1027,51 +1027,6 @@
     },
     {
       "opponent": {
-        "id": "victreebel-mega",
-        "name": "Victreebel-Mega"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": 14
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-guaranteed",
-          "metric": "canGuaranteed2hko",
-          "firstCan": true,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "slowking",
         "name": "Slowking"
       },
@@ -1136,6 +1091,51 @@
         {
           "ruleId": "ohko-guaranteed",
           "metric": "canGuaranteedOhko",
+          "firstCan": true,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "victreebel-mega",
+        "name": "Victreebel-Mega"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "HKO2_GUARANTEED",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": 14
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-guaranteed",
+          "metric": "canGuaranteed2hko",
           "firstCan": true,
           "secondCan": false,
           "speedTiebreak": true,
@@ -1411,33 +1411,6 @@
     },
     {
       "opponent": {
-        "id": "rampardos",
-        "name": "Rampardos"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "OHKO_GUARANTEED",
-        "canOhko": true,
-        "canGuaranteedOhko": true,
-        "canPossibleOhko": true,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": 15
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": true,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "cofagrigus",
         "name": "Cofagrigus"
       },
@@ -1480,6 +1453,33 @@
           "secondSpeedAdvantage": -75,
           "resolved": true,
           "resolution": "first-lose-second-win-speed"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "rampardos",
+        "name": "Rampardos"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "OHKO_GUARANTEED",
+        "canOhko": true,
+        "canGuaranteedOhko": true,
+        "canPossibleOhko": true,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": 15
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": true,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
         }
       ]
     },
@@ -1791,51 +1791,6 @@
     },
     {
       "opponent": {
-        "id": "sandaconda",
-        "name": "Sandaconda"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": 34
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-guaranteed",
-          "metric": "canGuaranteed2hko",
-          "firstCan": true,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "serperior",
         "name": "Serperior"
       },
@@ -1876,6 +1831,51 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "sandaconda",
+        "name": "Sandaconda"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "HKO2_GUARANTEED",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": 34
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-guaranteed",
+          "metric": "canGuaranteed2hko",
+          "firstCan": true,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
         }
       ]
     },
@@ -2119,51 +2119,6 @@
     },
     {
       "opponent": {
-        "id": "excadrill",
-        "name": "Excadrill"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -4
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-guaranteed",
-          "metric": "canGuaranteed2hko",
-          "firstCan": true,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "farigiraf",
         "name": "Farigiraf"
       },
@@ -2204,6 +2159,51 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "excadrill",
+        "name": "Excadrill"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "HKO2_GUARANTEED",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": -4
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-guaranteed",
+          "metric": "canGuaranteed2hko",
+          "firstCan": true,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
         }
       ]
     },
@@ -2310,42 +2310,6 @@
     },
     {
       "opponent": {
-        "id": "jolteon",
-        "name": "Jolteon"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "OHKO_POSSIBLE",
-        "canOhko": true,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": true,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -64
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": true,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "alcremie",
         "name": "Alcremie"
       },
@@ -2397,6 +2361,42 @@
           "secondSpeedAdvantage": -52,
           "resolved": true,
           "resolution": "first-win-second-lose-speed"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "jolteon",
+        "name": "Jolteon"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "OHKO_POSSIBLE",
+        "canOhko": true,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": true,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": -64
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": true,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
         }
       ]
     },
@@ -2559,8 +2559,8 @@
     },
     {
       "opponent": {
-        "id": "heliolisk",
-        "name": "Heliolisk"
+        "id": "politoed",
+        "name": "Politoed"
       },
       "result": "win",
       "metadata": {
@@ -2570,7 +2570,7 @@
         "canPossibleOhko": true,
         "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": -41
+        "speedAdvantage": 33
       },
       "explanationTrace": [
         {
@@ -2586,8 +2586,8 @@
     },
     {
       "opponent": {
-        "id": "politoed",
-        "name": "Politoed"
+        "id": "heliolisk",
+        "name": "Heliolisk"
       },
       "result": "win",
       "metadata": {
@@ -2597,7 +2597,7 @@
         "canPossibleOhko": true,
         "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": 33
+        "speedAdvantage": -41
       },
       "explanationTrace": [
         {
@@ -2714,33 +2714,6 @@
     },
     {
       "opponent": {
-        "id": "raichu",
-        "name": "Raichu"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "OHKO_GUARANTEED",
-        "canOhko": true,
-        "canGuaranteedOhko": true,
-        "canPossibleOhko": true,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -42
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": true,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "mr-rime",
         "name": "Mr-Rime"
       },
@@ -2789,6 +2762,33 @@
         "canGuaranteed2hko": true,
         "canPossible2hko": true,
         "speedAdvantage": -7
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": true,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "raichu",
+        "name": "Raichu"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "OHKO_GUARANTEED",
+        "canOhko": true,
+        "canGuaranteedOhko": true,
+        "canPossibleOhko": true,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": -42
       },
       "explanationTrace": [
         {
@@ -2887,6 +2887,33 @@
     },
     {
       "opponent": {
+        "id": "raichu-alola",
+        "name": "Raichu-Alola"
+      },
+      "result": "win",
+      "metadata": {
+        "bestKillTier": "OHKO_GUARANTEED",
+        "canOhko": true,
+        "canGuaranteedOhko": true,
+        "canPossibleOhko": true,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": -42
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": true,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
         "id": "sableye-mega",
         "name": "Sableye-Mega"
       },
@@ -2936,33 +2963,6 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "raichu-alola",
-        "name": "Raichu-Alola"
-      },
-      "result": "win",
-      "metadata": {
-        "bestKillTier": "OHKO_GUARANTEED",
-        "canOhko": true,
-        "canGuaranteedOhko": true,
-        "canPossibleOhko": true,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -42
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": true,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
         }
       ]
     },
@@ -3915,8 +3915,35 @@
     },
     {
       "opponent": {
-        "id": "charizard-mega-x",
-        "name": "Charizard-Mega-X"
+        "id": "floette-mega",
+        "name": "Floette-Mega"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_GUARANTEED",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": -33
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "feraligatr-mega",
+        "name": "Feraligatr-Mega"
       },
       "result": "lose",
       "metadata": {
@@ -3926,12 +3953,21 @@
         "canPossibleOhko": false,
         "canGuaranteed2hko": false,
         "canPossible2hko": true,
-        "speedAdvantage": -31
+        "speedAdvantage": -7
       },
       "explanationTrace": [
         {
           "ruleId": "ohko-guaranteed",
           "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
           "firstCan": false,
           "secondCan": true,
           "speedTiebreak": true,
@@ -3969,6 +4005,62 @@
     },
     {
       "opponent": {
+        "id": "charizard-mega-x",
+        "name": "Charizard-Mega-X"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_POSSIBLE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": true,
+        "speedAdvantage": -31
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "delphox-mega",
+        "name": "Delphox-Mega"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "OHKO_GUARANTEED",
+        "canOhko": true,
+        "canGuaranteedOhko": true,
+        "canPossibleOhko": true,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": -68
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": true,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "firstSpeedAdvantage": -68,
+          "secondSpeedAdvantage": 68,
+          "resolved": true,
+          "resolution": "first-lose-second-win-speed"
+        }
+      ]
+    },
+    {
+      "opponent": {
         "id": "archaludon",
         "name": "Archaludon"
       },
@@ -3980,6 +4072,33 @@
         "canPossibleOhko": false,
         "canGuaranteed2hko": false,
         "canPossible2hko": false,
+        "speedAdvantage": 9
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "emboar-mega",
+        "name": "Emboar-Mega"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_GUARANTEED",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
         "speedAdvantage": 9
       },
       "explanationTrace": [
@@ -4043,18 +4162,18 @@
     },
     {
       "opponent": {
-        "id": "emboar-mega",
-        "name": "Emboar-Mega"
+        "id": "garchomp-mega",
+        "name": "Garchomp-Mega"
       },
       "result": "lose",
       "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
+        "bestKillTier": "HKO2_POSSIBLE",
         "canOhko": false,
         "canGuaranteedOhko": false,
         "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
+        "canGuaranteed2hko": false,
         "canPossible2hko": true,
-        "speedAdvantage": 9
+        "speedAdvantage": -22
       },
       "explanationTrace": [
         {
@@ -4065,35 +4184,6 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "delphox-mega",
-        "name": "Delphox-Mega"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "OHKO_GUARANTEED",
-        "canOhko": true,
-        "canGuaranteedOhko": true,
-        "canPossibleOhko": true,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -68
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": true,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "firstSpeedAdvantage": -68,
-          "secondSpeedAdvantage": 68,
-          "resolved": true,
-          "resolution": "first-lose-second-win-speed"
         }
       ]
     },
@@ -4153,18 +4243,18 @@
     },
     {
       "opponent": {
-        "id": "garchomp-mega",
-        "name": "Garchomp-Mega"
+        "id": "hawlucha-mega",
+        "name": "Hawlucha-Mega"
       },
       "result": "lose",
       "metadata": {
-        "bestKillTier": "HKO2_POSSIBLE",
+        "bestKillTier": "WORSE",
         "canOhko": false,
         "canGuaranteedOhko": false,
         "canPossibleOhko": false,
         "canGuaranteed2hko": false,
-        "canPossible2hko": true,
-        "speedAdvantage": -22
+        "canPossible2hko": false,
+        "speedAdvantage": -18
       },
       "explanationTrace": [
         {
@@ -4192,33 +4282,6 @@
         "canGuaranteed2hko": true,
         "canPossible2hko": true,
         "speedAdvantage": -31
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "hawlucha-mega",
-        "name": "Hawlucha-Mega"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "WORSE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": false,
-        "speedAdvantage": -18
       },
       "explanationTrace": [
         {
@@ -4288,32 +4351,23 @@
     },
     {
       "opponent": {
-        "id": "floette-mega",
-        "name": "Floette-Mega"
+        "id": "alakazam-mega",
+        "name": "Alakazam-Mega"
       },
       "result": "lose",
       "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
+        "bestKillTier": "OHKO_POSSIBLE",
+        "canOhko": true,
         "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
+        "canPossibleOhko": true,
         "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": -18
+        "speedAdvantage": -86
       },
       "explanationTrace": [
         {
           "ruleId": "ohko-guaranteed",
           "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
           "firstCan": false,
           "secondCan": true,
           "speedTiebreak": true,
@@ -4414,33 +4468,6 @@
     },
     {
       "opponent": {
-        "id": "alakazam-mega",
-        "name": "Alakazam-Mega"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "OHKO_POSSIBLE",
-        "canOhko": true,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": true,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -86
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "goodra",
         "name": "Goodra"
       },
@@ -4513,33 +4540,6 @@
     },
     {
       "opponent": {
-        "id": "pinsir-mega",
-        "name": "Pinsir-Mega"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "HKO2_POSSIBLE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": true,
-        "speedAdvantage": -36
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "lucario-mega",
         "name": "Lucario-Mega"
       },
@@ -4575,6 +4575,33 @@
         {
           "ruleId": "hko2-guaranteed",
           "metric": "canGuaranteed2hko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "pinsir-mega",
+        "name": "Pinsir-Mega"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_POSSIBLE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": true,
+        "speedAdvantage": -36
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
           "firstCan": false,
           "secondCan": true,
           "speedTiebreak": true,
@@ -4686,33 +4713,6 @@
     },
     {
       "opponent": {
-        "id": "typhlosion-hisui",
-        "name": "Typhlosion-Hisui"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -25
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "dragonite-mega",
         "name": "Dragonite-Mega"
       },
@@ -4758,8 +4758,8 @@
     },
     {
       "opponent": {
-        "id": "delphox",
-        "name": "Delphox"
+        "id": "typhlosion-hisui",
+        "name": "Typhlosion-Hisui"
       },
       "result": "lose",
       "metadata": {
@@ -4769,7 +4769,7 @@
         "canPossibleOhko": false,
         "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": -35
+        "speedAdvantage": -25
       },
       "explanationTrace": [
         {
@@ -4807,6 +4807,33 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-lose-second-win"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "delphox",
+        "name": "Delphox"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_GUARANTEED",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": -35
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
         }
       ]
     },
@@ -4978,6 +5005,33 @@
     },
     {
       "opponent": {
+        "id": "hydreigon",
+        "name": "Hydreigon"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "WORSE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": false,
+        "speedAdvantage": -29
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
         "id": "lopunny-mega",
         "name": "Lopunny-Mega"
       },
@@ -5020,33 +5074,6 @@
           "secondSpeedAdvantage": 69,
           "resolved": true,
           "resolution": "first-lose-second-win-speed"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "hydreigon",
-        "name": "Hydreigon"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "WORSE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": false,
-        "speedAdvantage": -29
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-win-second-lose"
         }
       ]
     },
@@ -5173,18 +5200,18 @@
     },
     {
       "opponent": {
-        "id": "kangaskhan",
-        "name": "Kangaskhan"
+        "id": "slowbro-mega",
+        "name": "Slowbro-Mega"
       },
       "result": "lose",
       "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
+        "bestKillTier": "HKO2_POSSIBLE",
         "canOhko": false,
         "canGuaranteedOhko": false,
         "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
+        "canGuaranteed2hko": false,
         "canPossible2hko": true,
-        "speedAdvantage": -20
+        "speedAdvantage": 86
       },
       "explanationTrace": [
         {
@@ -5208,13 +5235,11 @@
         {
           "ruleId": "hko2-guaranteed",
           "metric": "canGuaranteed2hko",
-          "firstCan": true,
+          "firstCan": false,
           "secondCan": true,
           "speedTiebreak": true,
-          "firstSpeedAdvantage": -20,
-          "secondSpeedAdvantage": 20,
           "resolved": true,
-          "resolution": "first-win-second-lose-speed"
+          "resolution": "first-lose-second-win"
         }
       ]
     },
@@ -5274,18 +5299,18 @@
     },
     {
       "opponent": {
-        "id": "slowbro-mega",
-        "name": "Slowbro-Mega"
+        "id": "kangaskhan",
+        "name": "Kangaskhan"
       },
       "result": "lose",
       "metadata": {
-        "bestKillTier": "HKO2_POSSIBLE",
+        "bestKillTier": "HKO2_GUARANTEED",
         "canOhko": false,
         "canGuaranteedOhko": false,
         "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
+        "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": 86
+        "speedAdvantage": -20
       },
       "explanationTrace": [
         {
@@ -5309,74 +5334,13 @@
         {
           "ruleId": "hko2-guaranteed",
           "metric": "canGuaranteed2hko",
-          "firstCan": false,
+          "firstCan": true,
           "secondCan": true,
           "speedTiebreak": true,
+          "firstSpeedAdvantage": -20,
+          "secondSpeedAdvantage": 20,
           "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "feraligatr-mega",
-        "name": "Feraligatr-Mega"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "HKO2_POSSIBLE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": true,
-        "speedAdvantage": -7
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "crabominable",
-        "name": "Crabominable"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": 73
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
+          "resolution": "first-win-second-lose-speed"
         }
       ]
     },
@@ -5427,18 +5391,18 @@
     },
     {
       "opponent": {
-        "id": "arcanine",
-        "name": "Arcanine"
+        "id": "crabominable",
+        "name": "Crabominable"
       },
       "result": "lose",
       "metadata": {
-        "bestKillTier": "HKO2_POSSIBLE",
+        "bestKillTier": "HKO2_GUARANTEED",
         "canOhko": false,
         "canGuaranteedOhko": false,
         "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
+        "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": 21
+        "speedAdvantage": 73
       },
       "explanationTrace": [
         {
@@ -5448,7 +5412,7 @@
           "secondCan": true,
           "speedTiebreak": true,
           "resolved": true,
-          "resolution": "first-win-second-lose"
+          "resolution": "first-lose-second-win"
         }
       ]
     },
@@ -5466,6 +5430,33 @@
         "canGuaranteed2hko": false,
         "canPossible2hko": false,
         "speedAdvantage": 19
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "arcanine",
+        "name": "Arcanine"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_POSSIBLE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": true,
+        "speedAdvantage": 21
       },
       "explanationTrace": [
         {
@@ -5562,6 +5553,51 @@
     },
     {
       "opponent": {
+        "id": "tyrantrum",
+        "name": "Tyrantrum"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_POSSIBLE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": true,
+        "speedAdvantage": 1
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-guaranteed",
+          "metric": "canGuaranteed2hko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
         "id": "tauros-paldea-combat",
         "name": "Tauros-Paldea-Combat"
       },
@@ -5609,51 +5645,6 @@
     },
     {
       "opponent": {
-        "id": "tyrantrum",
-        "name": "Tyrantrum"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "HKO2_POSSIBLE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": true,
-        "speedAdvantage": 1
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-guaranteed",
-          "metric": "canGuaranteed2hko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "glalie-mega",
         "name": "Glalie-Mega"
       },
@@ -5676,53 +5667,6 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "glimmora-mega",
-        "name": "Glimmora-Mega"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -32
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-guaranteed",
-          "metric": "canGuaranteed2hko",
-          "firstCan": true,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "firstSpeedAdvantage": -32,
-          "secondSpeedAdvantage": 32,
-          "resolved": true,
-          "resolution": "first-lose-second-win-speed"
         }
       ]
     },
@@ -5800,45 +5744,18 @@
     },
     {
       "opponent": {
-        "id": "flareon",
-        "name": "Flareon"
+        "id": "glimmora-mega",
+        "name": "Glimmora-Mega"
       },
       "result": "lose",
       "metadata": {
-        "bestKillTier": "HKO2_POSSIBLE",
+        "bestKillTier": "HKO2_GUARANTEED",
         "canOhko": false,
         "canGuaranteedOhko": false,
         "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
+        "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": 19
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "sneasler",
-        "name": "Sneasler"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "HKO2_POSSIBLE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": true,
-        "speedAdvantage": -36
+        "speedAdvantage": -32
       },
       "explanationTrace": [
         {
@@ -5862,11 +5779,40 @@
         {
           "ruleId": "hko2-guaranteed",
           "metric": "canGuaranteed2hko",
+          "firstCan": true,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "firstSpeedAdvantage": -32,
+          "secondSpeedAdvantage": 32,
+          "resolved": true,
+          "resolution": "first-lose-second-win-speed"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "flareon",
+        "name": "Flareon"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_POSSIBLE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": true,
+        "speedAdvantage": 19
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
           "firstCan": false,
           "secondCan": true,
           "speedTiebreak": true,
           "resolved": true,
-          "resolution": "first-lose-second-win"
+          "resolution": "first-win-second-lose"
         }
       ]
     },
@@ -5917,54 +5863,18 @@
     },
     {
       "opponent": {
-        "id": "goodra-hisui",
-        "name": "Goodra-Hisui"
+        "id": "sneasler",
+        "name": "Sneasler"
       },
       "result": "lose",
       "metadata": {
-        "bestKillTier": "WORSE",
+        "bestKillTier": "HKO2_POSSIBLE",
         "canOhko": false,
         "canGuaranteedOhko": false,
         "canPossibleOhko": false,
         "canGuaranteed2hko": false,
-        "canPossible2hko": false,
-        "speedAdvantage": 56
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "beartic",
-        "name": "Beartic"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
         "canPossible2hko": true,
-        "speedAdvantage": 24
+        "speedAdvantage": -36
       },
       "explanationTrace": [
         {
@@ -5980,10 +5890,19 @@
           "ruleId": "ohko-potential",
           "metric": "canPossibleOhko",
           "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-guaranteed",
+          "metric": "canGuaranteed2hko",
+          "firstCan": false,
           "secondCan": true,
           "speedTiebreak": true,
           "resolved": true,
-          "resolution": "first-win-second-lose"
+          "resolution": "first-lose-second-win"
         }
       ]
     },
@@ -6034,6 +5953,78 @@
     },
     {
       "opponent": {
+        "id": "beartic",
+        "name": "Beartic"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_GUARANTEED",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": 24
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "goodra-hisui",
+        "name": "Goodra-Hisui"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "WORSE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": false,
+        "speedAdvantage": 56
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
         "id": "empoleon",
         "name": "Empoleon"
       },
@@ -6065,53 +6056,6 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "glimmora",
-        "name": "Glimmora"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "HKO2_GUARANTEED",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": true,
-        "canPossible2hko": true,
-        "speedAdvantage": -15
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-guaranteed",
-          "metric": "canGuaranteed2hko",
-          "firstCan": true,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "firstSpeedAdvantage": -15,
-          "secondSpeedAdvantage": 15,
-          "resolved": true,
-          "resolution": "first-lose-second-win-speed"
         }
       ]
     },
@@ -6184,6 +6128,53 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "glimmora",
+        "name": "Glimmora"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "HKO2_GUARANTEED",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": true,
+        "canPossible2hko": true,
+        "speedAdvantage": -15
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-guaranteed",
+          "metric": "canGuaranteed2hko",
+          "firstCan": true,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "firstSpeedAdvantage": -15,
+          "secondSpeedAdvantage": 15,
+          "resolved": true,
+          "resolution": "first-lose-second-win-speed"
         }
       ]
     },
@@ -6364,33 +6355,6 @@
     },
     {
       "opponent": {
-        "id": "scovillain",
-        "name": "Scovillain"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "WORSE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": false,
-        "speedAdvantage": -3
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "sharpedo-mega",
         "name": "Sharpedo-Mega"
       },
@@ -6415,6 +6379,33 @@
           "secondSpeedAdvantage": 21,
           "resolved": true,
           "resolution": "first-lose-second-win-speed"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "scovillain",
+        "name": "Scovillain"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "WORSE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": false,
+        "speedAdvantage": -3
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
         }
       ]
     },
@@ -7396,42 +7387,6 @@
     },
     {
       "opponent": {
-        "id": "umbreon",
-        "name": "Umbreon"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "WORSE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": false,
-        "speedAdvantage": 51
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-win-second-lose"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "camerupt",
         "name": "Camerupt"
       },
@@ -7485,6 +7440,42 @@
         {
           "ruleId": "ohko-guaranteed",
           "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "umbreon",
+        "name": "Umbreon"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "WORSE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": false,
+        "speedAdvantage": 51
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
           "firstCan": false,
           "secondCan": true,
           "speedTiebreak": true,
@@ -7830,60 +7821,6 @@
     },
     {
       "opponent": {
-        "id": "appletun",
-        "name": "Appletun"
-      },
-      "result": "lose",
-      "metadata": {
-        "bestKillTier": "WORSE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": false,
-        "speedAdvantage": 91
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-guaranteed",
-          "metric": "canGuaranteed2hko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-potential",
-          "metric": "canPossible2hko",
-          "firstCan": false,
-          "secondCan": true,
-          "speedTiebreak": true,
-          "resolved": true,
-          "resolution": "first-lose-second-win"
-        }
-      ]
-    },
-    {
-      "opponent": {
         "id": "pidgeot",
         "name": "Pidgeot"
       },
@@ -7933,6 +7870,60 @@
           "speedTiebreak": true,
           "resolved": true,
           "resolution": "first-win-second-lose"
+        }
+      ]
+    },
+    {
+      "opponent": {
+        "id": "appletun",
+        "name": "Appletun"
+      },
+      "result": "lose",
+      "metadata": {
+        "bestKillTier": "WORSE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": false,
+        "speedAdvantage": 91
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-guaranteed",
+          "metric": "canGuaranteed2hko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-potential",
+          "metric": "canPossible2hko",
+          "firstCan": false,
+          "secondCan": true,
+          "speedTiebreak": true,
+          "resolved": true,
+          "resolution": "first-lose-second-win"
         }
       ]
     },
@@ -8413,8 +8404,8 @@
     },
     {
       "opponent": {
-        "id": "garchomp",
-        "name": "Garchomp"
+        "id": "scizor-mega",
+        "name": "Scizor-Mega"
       },
       "result": "tie",
       "metadata": {
@@ -8424,7 +8415,7 @@
         "canPossibleOhko": false,
         "canGuaranteed2hko": false,
         "canPossible2hko": false,
-        "speedAdvantage": 9
+        "speedAdvantage": 41
       },
       "explanationTrace": [
         {
@@ -8472,8 +8463,8 @@
     },
     {
       "opponent": {
-        "id": "scizor-mega",
-        "name": "Scizor-Mega"
+        "id": "garchomp",
+        "name": "Garchomp"
       },
       "result": "tie",
       "metadata": {
@@ -8483,7 +8474,7 @@
         "canPossibleOhko": false,
         "canGuaranteed2hko": false,
         "canPossible2hko": false,
-        "speedAdvantage": 41
+        "speedAdvantage": 9
       },
       "explanationTrace": [
         {
@@ -9003,6 +8994,65 @@
     },
     {
       "opponent": {
+        "id": "leafeon",
+        "name": "Leafeon"
+      },
+      "result": "tie",
+      "metadata": {
+        "bestKillTier": "WORSE",
+        "canOhko": false,
+        "canGuaranteedOhko": false,
+        "canPossibleOhko": false,
+        "canGuaranteed2hko": false,
+        "canPossible2hko": false,
+        "speedAdvantage": -11
+      },
+      "explanationTrace": [
+        {
+          "ruleId": "ohko-guaranteed",
+          "metric": "canGuaranteedOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "ohko-potential",
+          "metric": "canPossibleOhko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-guaranteed",
+          "metric": "canGuaranteed2hko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "hko2-potential",
+          "metric": "canPossible2hko",
+          "firstCan": false,
+          "secondCan": false,
+          "speedTiebreak": true,
+          "resolved": false,
+          "resolution": "fallthrough"
+        },
+        {
+          "ruleId": "default-tie",
+          "resolved": true,
+          "resolution": "tie"
+        }
+      ]
+    },
+    {
+      "opponent": {
         "id": "decidueye-hisui",
         "name": "Decidueye-Hisui"
       },
@@ -9074,65 +9124,6 @@
         "canGuaranteed2hko": false,
         "canPossible2hko": false,
         "speedAdvantage": 88
-      },
-      "explanationTrace": [
-        {
-          "ruleId": "ohko-guaranteed",
-          "metric": "canGuaranteedOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "ohko-potential",
-          "metric": "canPossibleOhko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-guaranteed",
-          "metric": "canGuaranteed2hko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "hko2-potential",
-          "metric": "canPossible2hko",
-          "firstCan": false,
-          "secondCan": false,
-          "speedTiebreak": true,
-          "resolved": false,
-          "resolution": "fallthrough"
-        },
-        {
-          "ruleId": "default-tie",
-          "resolved": true,
-          "resolution": "tie"
-        }
-      ]
-    },
-    {
-      "opponent": {
-        "id": "leafeon",
-        "name": "Leafeon"
-      },
-      "result": "tie",
-      "metadata": {
-        "bestKillTier": "WORSE",
-        "canOhko": false,
-        "canGuaranteedOhko": false,
-        "canPossibleOhko": false,
-        "canGuaranteed2hko": false,
-        "canPossible2hko": false,
-        "speedAdvantage": -11
       },
       "explanationTrace": [
         {
@@ -9357,8 +9348,8 @@
     },
     {
       "opponent": {
-        "id": "audino-mega",
-        "name": "Audino-Mega"
+        "id": "whimsicott",
+        "name": "Whimsicott"
       },
       "result": "tie",
       "metadata": {
@@ -9368,7 +9359,7 @@
         "canPossibleOhko": false,
         "canGuaranteed2hko": false,
         "canPossible2hko": false,
-        "speedAdvantage": 66
+        "speedAdvantage": -9
       },
       "explanationTrace": [
         {
@@ -9416,8 +9407,8 @@
     },
     {
       "opponent": {
-        "id": "whimsicott",
-        "name": "Whimsicott"
+        "id": "audino-mega",
+        "name": "Audino-Mega"
       },
       "result": "tie",
       "metadata": {
@@ -9427,7 +9418,7 @@
         "canPossibleOhko": false,
         "canGuaranteed2hko": false,
         "canPossible2hko": false,
-        "speedAdvantage": -9
+        "speedAdvantage": 66
       },
       "explanationTrace": [
         {
