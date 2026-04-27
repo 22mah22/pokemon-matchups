@@ -10,7 +10,12 @@ npm run matchups:test1
 npm run matchups:test2
 ```
 
-This reads Showdown import sets from `libraries/*.txt` (with optional enrichment from companion `libraries/*.json`) and writes matchup outputs to `matchups/*_matchups.json` and `matchups/*_matchups.txt`.
+This reads detailed Showdown import sets from `libraries/*.txt` and writes matchup outputs to `matchups/*_matchups.json` and `matchups/*_matchups.txt`.
+
+## Input format
+
+- Supported input is **only** detailed Showdown import text in `libraries/*.txt`.
+- Duplicate species are supported only when each set has a unique `set.name` (for example `Nickname (Species)`).
 
 All damage/stat calculations are performed at **Level 50**.
 
@@ -21,9 +26,7 @@ The repo default is `ignore-scripts=true` in `.npmrc` to block lifecycle scripts
 ## File layout
 
 - `libraries/test_set_1.txt`
-- `libraries/test_set_1.json`
 - `libraries/test_set_2.txt`
-- `libraries/test_set_2.json`
 - `scripts/generate-matchups.js`
 - `matchups/test_set_1_matchups.json`
 - `matchups/test_set_1_matchups.txt`
