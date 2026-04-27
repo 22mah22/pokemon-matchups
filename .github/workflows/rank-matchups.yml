@@ -89,9 +89,15 @@ jobs:
       - name: Commit and push ranking output (optional)
         if: ${{ github.event.inputs.commit_and_push == 'true' }}
         env:
+          INPUT_FILE: ${{ github.event.inputs.input_file }}
           OUTPUT_FILE: ${{ github.event.inputs.output_file }}
           JUSTIFICATIONS_DIR: ${{ github.event.inputs.justifications_dir }}
         run: |
+          input_dir="$(dirname "$INPUT_FILE")"
+          input_base="$(basename "$INPUT_FILE")"
+          input_stem="${input_base%.*}"
+          weighted_output_file="${input_dir}/${input_stem}_weighted.json"
+
           output_dir="$(dirname "$OUTPUT_FILE")"
           output_base="$(basename "$OUTPUT_FILE")"
           output_stem="${output_base%.*}"
@@ -106,6 +112,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add "$OUTPUT_FILE"
+          git add "$weighted_output_file"
           git add "$resolved_justifications_dir"
 
           if git diff --cached --quiet; then
@@ -118,9 +125,15 @@ jobs:
 
       - name: Resolve ranking artifact paths
         env:
+          INPUT_FILE: ${{ github.event.inputs.input_file }}
           OUTPUT_FILE: ${{ github.event.inputs.output_file }}
           JUSTIFICATIONS_DIR: ${{ github.event.inputs.justifications_dir }}
         run: |
+          input_dir="$(dirname "$INPUT_FILE")"
+          input_base="$(basename "$INPUT_FILE")"
+          input_stem="${input_base%.*}"
+          weighted_output_file="${input_dir}/${input_stem}_weighted.json"
+
           output_dir="$(dirname "$OUTPUT_FILE")"
           output_base="$(basename "$OUTPUT_FILE")"
           output_stem="${output_base%.*}"
@@ -132,6 +145,7 @@ jobs:
           resolved_justifications_dir="${JUSTIFICATIONS_DIR:-$default_justifications_dir}"
           {
             echo "OUTPUT_FILE=$OUTPUT_FILE"
+            echo "WEIGHTED_OUTPUT_FILE=$weighted_output_file"
             echo "RESOLVED_JUSTIFICATIONS_DIR=$resolved_justifications_dir"
           } >> "$GITHUB_ENV"
 
@@ -141,4 +155,5 @@ jobs:
           name: ranked_matchups_output
           path: |
             ${{ env.OUTPUT_FILE }}
+            ${{ env.WEIGHTED_OUTPUT_FILE }}
             ${{ env.RESOLVED_JUSTIFICATIONS_DIR }}
