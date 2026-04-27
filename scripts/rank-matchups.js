@@ -105,13 +105,15 @@ function toDirectionalEntries(results, rulebook) {
     .filter((entry) => entry && entry.attacker && entry.defender)
     .map((entry) => {
       const speedAdvantage = Number(entry.attackerSpeed || 0) - Number(entry.defenderSpeed || 0);
+      const attackerId = normalizeName(entry.attackerId || entry.attacker).toLowerCase();
+      const defenderId = normalizeName(entry.defenderId || entry.defender).toLowerCase();
       return {
         pokemon: {
-          id: normalizeName(entry.attacker).toLowerCase(),
+          id: attackerId,
           name: normalizeName(entry.attacker),
         },
         opponent: {
-          id: normalizeName(entry.defender).toLowerCase(),
+          id: defenderId,
           name: normalizeName(entry.defender),
         },
         result: 'tie',
