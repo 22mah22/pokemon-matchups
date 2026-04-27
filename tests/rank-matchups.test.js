@@ -7,6 +7,7 @@ const path = require('node:path');
 const {
   aggregateRanking,
   buildPokemonJustificationPayloads,
+  loadResultsFromInput,
   sanitizePokemonFileName,
   sortJustificationDecisionsByOpponentRanking,
   writePokemonJustificationFiles,
@@ -185,3 +186,20 @@ test('sortJustificationDecisionsByOpponentRanking orders wins first and losses b
     ['win:B', 'win:C', 'lose:D', 'lose:E'],
   );
 });
+
+test('loadResultsFromInput rejects JSON library payloads that only contain sets', () => withTempDir((dir) => {
+  const inputPath = path.join(dir, 'library.json');
+  fs.writeFileSync(inputPath, JSON.stringify({
+    sets: [
+      {
+        pokemon: 'Pikachu',
+        set: 'Pikachu @ Light Ball\nAbility: Static\n- Thunderbolt',
+      },
+    ],
+  }));
+
+  assert.throws(
+    () => loadResultsFromInput(inputPath, { battleLevel: 50 }),
+    /must include a "results" array/i,
+  );
+}));
