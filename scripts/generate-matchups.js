@@ -232,7 +232,7 @@ function calculateMatchups(sets, options = {}) {
     : DEFAULT_BATTLE_LEVEL;
   const results = [];
   const skipped = [];
-  const pokemonCache = new Map();
+  const validSetEntries = [];
 
   for (const set of sets) {
     const validated = validateSet(set, battleLevel);
@@ -240,18 +240,34 @@ function calculateMatchups(sets, options = {}) {
       skipped.push({ name: set.name, species: set.species, reason: validated.error });
       continue;
     }
-    pokemonCache.set(set.name, validated.pokemon);
+    validSetEntries.push({ set, pokemon: validated.pokemon });
   }
 
-  const validSets = sets.filter((set) => pokemonCache.has(set.name));
+  const nameCounts = new Map();
+  for (const entry of validSetEntries) {
+    const key = entry.set.name;
+    nameCounts.set(key, (nameCounts.get(key) || 0) + 1);
+  }
 
-  for (let i = 0; i < validSets.length; i += 1) {
-    for (let j = 0; j < validSets.length; j += 1) {
+  const nameOccurrences = new Map();
+  for (const entry of validSetEntries) {
+    const baseName = entry.set.name;
+    const occurrence = (nameOccurrences.get(baseName) || 0) + 1;
+    nameOccurrences.set(baseName, occurrence);
+    const hasDuplicates = (nameCounts.get(baseName) || 0) > 1;
+    entry.combatantId = hasDuplicates ? `${baseName}#${occurrence}` : baseName;
+    entry.combatantName = hasDuplicates ? `${baseName} (Set ${occurrence})` : baseName;
+  }
+
+  for (let i = 0; i < validSetEntries.length; i += 1) {
+    for (let j = 0; j < validSetEntries.length; j += 1) {
       if (i === j) continue;
-      const attackerSet = validSets[i];
-      const defenderSet = validSets[j];
-      const attacker = pokemonCache.get(attackerSet.name);
-      const defender = pokemonCache.get(defenderSet.name);
+      const attackerEntry = validSetEntries[i];
+      const defenderEntry = validSetEntries[j];
+      const attackerSet = attackerEntry.set;
+      const defenderSet = defenderEntry.set;
+      const attacker = attackerEntry.pokemon;
+      const defender = defenderEntry.pokemon;
       const attackerSpeed = attacker?.stats?.spe ?? attacker?.rawStats?.spe ?? 0;
       const defenderSpeed = defender?.stats?.spe ?? defender?.rawStats?.spe ?? 0;
       const defenderHp = defender?.stats?.hp ?? defender?.rawStats?.hp ?? 1;
@@ -312,8 +328,12 @@ function calculateMatchups(sets, options = {}) {
       });
 
       const matchupResult = {
-        attacker: attackerSet.name,
-        defender: defenderSet.name,
+        attacker: attackerEntry.combatantName,
+        attackerId: attackerEntry.combatantId,
+        attackerBaseName: attackerSet.name,
+        defender: defenderEntry.combatantName,
+        defenderId: defenderEntry.combatantId,
+        defenderBaseName: defenderSet.name,
         attackerSpeed,
         defenderSpeed,
         speedTie: attackerSpeed === defenderSpeed,

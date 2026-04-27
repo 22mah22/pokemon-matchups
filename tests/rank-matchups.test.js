@@ -8,6 +8,7 @@ const {
   aggregateRanking,
   buildPokemonJustificationPayloads,
   loadResultsFromInput,
+  toNormalizedRecords,
   sanitizePokemonFileName,
   sortJustificationDecisionsByOpponentRanking,
   writePokemonJustificationFiles,
@@ -203,3 +204,50 @@ test('loadResultsFromInput rejects JSON library payloads that only contain sets'
     /must include a "results" array/i,
   );
 }));
+
+test('toNormalizedRecords preserves multiple sets that share a species name via attackerId/defenderId', () => {
+  const normalized = toNormalizedRecords([
+    {
+      attacker: 'Blastoise-Mega (Set 1)',
+      attackerId: 'blastoise-mega#1',
+      defender: 'Venusaur-Mega',
+      defenderId: 'venusaur-mega',
+      attackerSpeed: 120,
+      defenderSpeed: 100,
+      moves: [{ ohkoGuaranteed: true, ohkoPossible: true, hko2Guaranteed: true, hko2Possible: true }],
+    },
+    {
+      attacker: 'Venusaur-Mega',
+      attackerId: 'venusaur-mega',
+      defender: 'Blastoise-Mega (Set 1)',
+      defenderId: 'blastoise-mega#1',
+      attackerSpeed: 100,
+      defenderSpeed: 120,
+      moves: [{ ohkoGuaranteed: false, ohkoPossible: false, hko2Guaranteed: false, hko2Possible: false }],
+    },
+    {
+      attacker: 'Blastoise-Mega (Set 2)',
+      attackerId: 'blastoise-mega#2',
+      defender: 'Venusaur-Mega',
+      defenderId: 'venusaur-mega',
+      attackerSpeed: 110,
+      defenderSpeed: 100,
+      moves: [{ ohkoGuaranteed: false, ohkoPossible: true, hko2Guaranteed: true, hko2Possible: true }],
+    },
+    {
+      attacker: 'Venusaur-Mega',
+      attackerId: 'venusaur-mega',
+      defender: 'Blastoise-Mega (Set 2)',
+      defenderId: 'blastoise-mega#2',
+      attackerSpeed: 100,
+      defenderSpeed: 110,
+      moves: [{ ohkoGuaranteed: false, ohkoPossible: false, hko2Guaranteed: false, hko2Possible: false }],
+    },
+  ], {
+    outcomeRules: [{ id: 'ohko-guaranteed', metric: 'canGuaranteedOhko', speedTiebreak: true }],
+  });
+
+  const ranking = aggregateRanking(normalized, { scoring: { win: 1, tie: 0, loss: -1 } });
+  const blastoiseRows = ranking.filter((row) => row.pokemon.startsWith('Blastoise-Mega'));
+  assert.equal(blastoiseRows.length, 2);
+});
