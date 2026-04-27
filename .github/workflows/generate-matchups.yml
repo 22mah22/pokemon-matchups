@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       library_file:
-        description: "Path to a showdown library file in this repo (for example: libraries/champions_ou.txt)"
+        description: "Path to a showdown library JSON file in this repo (for example: libraries/champions_ou.json)"
         required: true
-        default: "libraries/champions_ou.txt"
+        default: "libraries/champions_ou.json"
       commit_and_push:
         description: "Commit and push generated matchup files back to the branch"
         required: false
@@ -45,7 +45,11 @@ jobs:
         env:
           LIBRARY_FILE: ${{ github.event.inputs.library_file }}
         run: |
-          BASE_NAME="$(basename "$LIBRARY_FILE" .txt)"
+          if [[ "$LIBRARY_FILE" != *.json ]]; then
+            echo "::error::library_file must be a .json file. Received: $LIBRARY_FILE"
+            exit 1
+          fi
+          BASE_NAME="$(basename "$LIBRARY_FILE" .json)"
           echo "BASE_NAME=$BASE_NAME" >> "$GITHUB_ENV"
 
       - name: Commit and push generated files (optional)
@@ -54,7 +58,6 @@ jobs:
           BASE_NAME: ${{ env.BASE_NAME }}
         run: |
           JSON_FILE="matchups/${BASE_NAME}_matchups.json"
-          TXT_FILE="matchups/${BASE_NAME}_matchups.txt"
           COMPRESSED_FILE="${JSON_FILE}.gz"
           SPLIT_PREFIX="${COMPRESSED_FILE}.part"
           SPLIT_GLOB="${SPLIT_PREFIX}"*
@@ -74,7 +77,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            git add "$TXT_FILE" "$COMPRESSED_FILE" $SPLIT_GLOB
+            git add "$COMPRESSED_FILE" $SPLIT_GLOB
 
             if git diff --cached --quiet; then
               echo "No changes to commit."
@@ -89,7 +92,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add "$TXT_FILE" "$JSON_FILE"
+          git add "$JSON_FILE"
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
@@ -104,12 +107,6 @@ jobs:
         with:
           name: ${{ env.BASE_NAME }}_matchups_json
           path: matchups/${{ env.BASE_NAME }}_matchups.json
-
-      - name: Upload text output artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.BASE_NAME }}_matchups_txt
-          path: matchups/${{ env.BASE_NAME }}_matchups.txt
 
       - name: Upload compressed/split output artifacts (if present)
         uses: actions/upload-artifact@v4

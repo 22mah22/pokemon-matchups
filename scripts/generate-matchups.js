@@ -101,14 +101,30 @@ function hasDetailedSetData(set) {
 
 function parseLibrarySets(inputPath) {
   const ext = path.extname(inputPath).toLowerCase();
-  if (ext !== '.txt') {
-    throw new Error(
-      `Unsupported input extension "${ext || '(none)'}". Only detailed Showdown set libraries in .txt format are supported.`
-    );
+  const file = fs.readFileSync(inputPath, 'utf8');
+
+  if (ext === '.txt') {
+    return parseShowdownSets(file);
   }
 
-  const file = fs.readFileSync(inputPath, 'utf8');
-  return parseShowdownSets(file);
+  if (ext === '.json') {
+    const parsed = JSON.parse(file);
+    const rawSets = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed?.sets)
+        ? parsed.sets
+        : [];
+    const showdownText = rawSets
+      .map((entry) => (typeof entry === 'string' ? entry : entry?.set))
+      .filter((setText) => typeof setText === 'string' && setText.trim().length > 0)
+      .join('\n\n');
+
+    return parseShowdownSets(showdownText);
+  }
+
+  throw new Error(
+    `Unsupported input extension "${ext || '(none)'}". Use .json (preferred) or .txt library files.`
+  );
 }
 
 function toPokemon(set, battleLevel = DEFAULT_BATTLE_LEVEL) {
@@ -333,7 +349,7 @@ function toText(results) {
 function main() {
   const inputArg = process.argv[2];
   if (!inputArg) {
-    console.error('Usage: node scripts/generate-matchups.js <path-to-library-txt>');
+    console.error('Usage: node scripts/generate-matchups.js <path-to-library-json-or-txt>');
     process.exit(1);
   }
 
